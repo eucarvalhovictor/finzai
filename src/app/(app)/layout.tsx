@@ -3,9 +3,9 @@ import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
-  SidebarContent,
   SidebarTrigger,
   SidebarInset,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { SidebarNav } from './_components/sidebar-nav';
 
@@ -16,11 +16,13 @@ export default function AppLayout({
 }) {
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <AppLogo />
+          <SidebarTrigger />
         </SidebarHeader>
         <SidebarNav />
+        <SidebarRail />
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
