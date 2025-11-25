@@ -28,14 +28,6 @@ export function SidebarNav() {
     <>
       <SidebarContent>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <Button asChild className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Link href="/transactions?action=add">
-                <PlusCircle />
-                <span>Adicionar Despesa</span>
-              </Link>
-            </Button>
-          </SidebarMenuItem>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -55,6 +47,14 @@ export function SidebarNav() {
       <SidebarSeparator />
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+             <Button asChild className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Link href="/transactions?action=add">
+                    <PlusCircle />
+                    <span>Adicionar Despesa</span>
+                </Link>
+             </Button>
+          </SidebarMenuItem>
           <SidebarMenuItem>
              <SidebarMenuButton tooltip="Sair">
                 <LogOut className="text-destructive" />
