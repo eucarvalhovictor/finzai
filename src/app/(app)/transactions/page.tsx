@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
 import type { Transaction } from '@/lib/types';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
   return (
@@ -64,10 +64,13 @@ export default function TransactionsPage() {
   // In a real app, this state would come from a global store or be fetched from an API
   const [transactions, setTransactions] = useState(allTransactions);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleAddTransactionClick = () => {
     // This now just opens the dialog via a query param handled in the sidebar
-    router.push('/transactions?action=add', { scroll: false });
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.set('action', 'add');
+    router.push(`/transactions?${newParams.toString()}`, { scroll: false });
   };
 
 
