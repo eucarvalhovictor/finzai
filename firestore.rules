@@ -9,8 +9,8 @@
  * naturally isolates user data.
  *
  * Key Security Decisions:
- * - User Listing Disabled: To protect user privacy, it is impossible to list all documents in the `/users`
- *   collection unless the user is an admin or the query is strictly limited.
+ * - User Listing Disabled (for non-admins): To protect user privacy, it is impossible to list all documents in the `/users`
+ *   collection unless the user is an admin or the query is strictly limited for checking existence on sign-up.
  * - Path-Based Authorization: All authorization checks are based on the document path. A user's UID must
  *   match the `{userId}` segment in the path to gain access.
  * - Relational Integrity: On document creation, rules enforce that an internal `userId` field must match the
@@ -51,15 +51,6 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && exists(/databases/$(database)/documents/users/$(userId));
     }
-    
-    /**
-     * Returns true if the authenticated user has the 'admin' role by reading their user document.
-     * This function should only be used in contexts where a read operation is permitted.
-     */
-    function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
 
     /**
      * Validates that a user is creating their own root user document and that
@@ -112,14 +103,13 @@ service cloud.firestore {
      * @allow (update) An owner can update their name; an admin can update a user's role.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      // Allow listing for admins OR if the query is just checking for the first user
+      allow get: if isOwner(userId) || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
       allow list: if (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') || request.query.limit <= 1;
       allow create: if isCreatingOwnUserDoc(userId);
       // Owners can update their firstName and lastName
       // Admins can update a user's role.
       allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']))
-                      || (isAdmin() && request.resource.data.keys().hasOnly(['role']));
+                      || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && request.resource.data.keys().hasOnly(['role']));
       allow delete: if isExistingOwner(userId);
 
       // -----------------------------------------------------------------------
