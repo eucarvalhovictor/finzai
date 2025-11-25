@@ -15,11 +15,28 @@ import { PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Transaction } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { TransactionForm } from '../_components/transaction-form';
 
 
 function TransactionsTable({ transactions, isLoading }: { transactions: Transaction[] | null, isLoading: boolean }) {
@@ -74,9 +91,20 @@ function TransactionsTable({ transactions, isLoading }: { transactions: Transact
 
 
 export default function TransactionsPage() {
-  const router = useRouter();
   const { user, firestore } = useFirebase();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
+
+  const handleTransactionSaved = () => {
+    setIsDialogOpen(false);
+  };
+
+  const AddTransactionButton = (
+    <Button>
+      <PlusCircle className="mr-2 h-4 w-4" />
+      Adicionar Transação
+    </Button>
+  );
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -94,7 +122,35 @@ export default function TransactionsPage() {
         title="Rendas & Despesas"
         description="Acompanhe todas as suas transações financeiras em um só lugar."
       >
-        {/* O botão de adicionar transação está agora na sidebar, mas podemos manter um aqui se desejado */}
+        {isMobile ? (
+            <Sheet open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <SheetTrigger asChild>
+                    {AddTransactionButton}
+                </SheetTrigger>
+                <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-lg">
+                    <SheetHeader>
+                        <SheetTitle>Adicionar Nova Transação</SheetTitle>
+                        <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
+                    </SheetHeader>
+                    <div className="py-4">
+                        <TransactionForm onTransactionSaved={handleTransactionSaved} />
+                    </div>
+                </SheetContent>
+            </Sheet>
+        ) : (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                    {AddTransactionButton}
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Adicionar Nova Transação</DialogTitle>
+                        <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
+                    </DialogHeader>
+                    <TransactionForm onTransactionSaved={handleTransactionSaved} />
+                </DialogContent>
+            </Dialog>
+        )}
       </PageHeader>
       
       <Tabs defaultValue="all">

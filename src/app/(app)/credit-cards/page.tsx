@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -34,12 +34,29 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import type { CreditCard, UserProfile, Transaction } from '@/lib/types';
 import { useFirebase, useCollection, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const cardSchema = z.object({
   cardHolderName: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
@@ -53,6 +70,8 @@ type CardFormValues = z.infer<typeof cardSchema>;
 export default function CreditCardsPage() {
   const { user, firestore } = useFirebase();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<CreditCard | null>(null);
+  const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -94,6 +113,27 @@ export default function CreditCardsPage() {
     form.reset();
     setIsDialogOpen(false);
   }
+  
+  async function handleDeleteCard(cardId: string) {
+    if (!user || !firestore) return;
+    const cardDocRef = doc(firestore, `users/${user.uid}/creditCards`, cardId);
+    try {
+      await deleteDoc(cardDocRef);
+      toast({
+        title: 'Cartão Excluído',
+        description: 'O cartão de crédito foi removido com sucesso.',
+      });
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível remover o cartão.',
+      });
+    } finally {
+        setCardToDelete(null);
+    }
+  }
+
 
   const userIsBasic = userProfile?.role === 'basico';
   const hasReachedCardLimit = userIsBasic && cards && cards.length >= 1;
@@ -101,6 +141,7 @@ export default function CreditCardsPage() {
   const isLoading = isLoadingCards || isLoadingProfile || isLoadingTransactions;
 
   return (
+    <>
     <div className="grid gap-6">
       <PageHeader
         title="Gerenciamento de Cartões"
@@ -201,9 +242,25 @@ export default function CreditCardsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>{card.cardHolderName}</CardTitle>
-                  <span className="text-sm font-mono text-muted-foreground">
-                    **** {card.cardNumber}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-mono text-muted-foreground">
+                        **** {card.cardNumber}
+                    </span>
+                     <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Ações do cartão</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                         <DropdownMenuItem onSelect={() => setCardToDelete(card)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
                 <CardDescription>
                   Vencimento em {card.expiryDate}
@@ -259,5 +316,25 @@ export default function CreditCardsPage() {
         )}
       </div>
     </div>
+    <AlertDialog open={!!cardToDelete} onOpenChange={(isOpen) => !isOpen && setCardToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                <AlertDialogDescription>
+                Esta ação não pode ser desfeita. Isso irá excluir permanentemente o cartão <span className="font-bold">{cardToDelete?.cardHolderName} (final {cardToDelete?.cardNumber})</span>.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setCardToDelete(null)}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                    onClick={() => cardToDelete && handleDeleteCard(cardToDelete.id)}
+                    className="bg-destructive hover:bg-destructive/90"
+                    >
+                    Sim, excluir cartão
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
