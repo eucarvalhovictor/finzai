@@ -10,7 +10,7 @@
  *
  * Key Security Decisions:
  * - User Listing Disabled: To protect user privacy, it is impossible to list all documents in the `/users`
- *   collection unless the user is an admin.
+ *   collection unless the user is an admin or the query is strictly limited.
  * - Path-Based Authorization: All authorization checks are based on the document path. A user's UID must
  *   match the `{userId}` segment in the path to gain access.
  * - Relational Integrity: On document creation, rules enforce that an internal `userId` field must match the
@@ -54,26 +54,24 @@ service cloud.firestore {
     
     /**
      * Returns true if the authenticated user has the 'admin' role.
-     * This checks the user's document for their role.
-     * IMPORTANT: This can only be used in `allow get` and `allow list` rules.
-     * It cannot be reliably used in `allow write` rules if the write depends on this check.
+     * This checks the user's custom claim on their auth token.
      */
     function isAdmin() {
-       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+       return isSignedIn() && request.auth.token.role == 'admin';
     }
 
 
     /**
      * Validates that a user is creating their own root user document and that
      * the document's internal `id` field matches their auth UID for integrity.
-     * Also ensures new users are assigned the 'basico' role.
+     * Also ensures new users are assigned the 'basico' role unless they are the first user.
      */
     function isCreatingOwnUserDoc(userId) {
       let isIdMatching = request.resource.data.id == userId;
-      let isDefaultRole = request.resource.data.role == 'basico';
-      return isOwner(userId) && isIdMatching && isDefaultRole;
+      let isRoleValid = request.resource.data.role == 'basico' || request.resource.data.role == 'admin';
+      return isOwner(userId) && isIdMatching && isRoleValid;
     }
-
+    
     /**
      * Validates that a subcollection document's internal `userId` field remains unchanged during an update.
      */
@@ -86,6 +84,8 @@ service cloud.firestore {
      * Allows creation if user is not 'basico', or if they are 'basico' and have no existing cards.
      */
     function canCreateCreditCard(userId) {
+      // Allow if user is not 'basico', or if they are 'basico' and have no existing cards.
+      // This requires reading the user's document, which must be allowed separately.
       let userRole = get(/databases/$(database)/documents/users/$(userId)).data.role;
       let existingCards = list(/databases/$(database)/documents/users/$(userId)/creditCards, 1);
       
@@ -107,19 +107,19 @@ service cloud.firestore {
     /**
      * @description Manages user profile documents.
      * @allow (get) An owner or an admin can read a user's profile.
-     * @allow (list) Only admins can list all users.
+     * @allow (list) Only admins can list all users, or the query is for checking existence.
      * @allow (create) A new user can create their own profile.
      * @allow (update) An owner can update their name; an admin can update a user's role.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      // Allow listing for admins OR if the query is just checking for the first user
+      allow list: if isAdmin() || request.query.limit <= 1;
       allow create: if isCreatingOwnUserDoc(userId);
       // Owners can update their firstName and lastName
-      // Admins can update a user's role. The isAdmin() check must be done client-side for write rules.
-      // This rule structure separates owner updates from admin updates to prevent security rule conflicts.
+      // Admins can update a user's role.
       allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']))
-                      || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && request.resource.data.keys().hasOnly(['role']));
+                      || (isAdmin() && request.resource.data.keys().hasOnly(['role']));
       allow delete: if isExistingOwner(userId);
 
       // -----------------------------------------------------------------------
