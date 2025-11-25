@@ -67,17 +67,13 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that the user document's internal 'id', 'email', and 'registrationDate' fields remain unchanged during an update.
-     * This is a critical security measure for user profile updates.
+     * Validates that a user's core fields (`id`, `email`, `registrationDate`) are not being changed during an update.
+     * This prevents users from modifying critical, immutable properties of their profile.
+     * It checks if any of these keys exist in the incoming request data. If they do, the update is denied.
      */
     function areUserCoreFieldsImmutable() {
-      // Check if the incoming request data attempts to change any of the core immutable fields.
-      // If a field exists in the request, it MUST match the existing value in the database.
-      let idIsUnchanged = !('id' in request.resource.data) || request.resource.data.id == resource.data.id;
-      let emailIsUnchanged = !('email' in request.resource.data) || request.resource.data.email == resource.data.email;
-      let registrationDateIsUnchanged = !('registrationDate' in request.resource.data) || request.resource.data.registrationDate == resource.data.registrationDate;
-
-      return idIsUnchanged && emailIsUnchanged && registrationDateIsUnchanged;
+      let incomingData = request.resource.data;
+      return !('id' in incomingData) && !('email' in incomingData) && !('registrationDate' in incomingData);
     }
 
 
