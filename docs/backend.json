@@ -1,0 +1,324 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Lime Wallet application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "Date and time the user registered.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "registrationDate"
+      ]
+    },
+    "CreditCard": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CreditCard",
+      "type": "object",
+      "description": "Represents a credit card owned by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the credit card entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N CreditCard)"
+        },
+        "cardNumber": {
+          "type": "string",
+          "description": "The credit card number (masked for security)."
+        },
+        "expiryDate": {
+          "type": "string",
+          "description": "The expiration date of the credit card (MM/YY)."
+        },
+        "cardHolderName": {
+          "type": "string",
+          "description": "The name of the card holder."
+        },
+        "balance": {
+          "type": "number",
+          "description": "The current balance of the credit card."
+        },
+        "creditLimit": {
+          "type": "number",
+          "description": "The credit limit of the credit card."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "cardNumber",
+        "expiryDate",
+        "cardHolderName",
+        "balance",
+        "creditLimit"
+      ]
+    },
+    "InvestmentAccount": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InvestmentAccount",
+      "type": "object",
+      "description": "Represents an investment account owned by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the investment account entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N InvestmentAccount)"
+        },
+        "accountName": {
+          "type": "string",
+          "description": "The name of the investment account."
+        },
+        "accountType": {
+          "type": "string",
+          "description": "The type of investment account (e.g., brokerage, retirement)."
+        },
+        "currentValue": {
+          "type": "number",
+          "description": "The current value of the investment account."
+        },
+        "institution": {
+          "type": "string",
+          "description": "The financial institution where the account is held."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "accountName",
+        "accountType",
+        "currentValue",
+        "institution"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a financial transaction.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Transaction)"
+        },
+        "creditCardId": {
+          "type": "string",
+          "description": "Reference to CreditCard. (Relationship: CreditCard 1:N Transaction). Nullable if not a credit card transaction."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the transaction.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the transaction."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the transaction (e.g., food, transportation)."
+        },
+        "transactionType": {
+          "type": "string",
+          "description": "The type of transaction. Can be income or expense."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "date",
+        "amount",
+        "description",
+        "category",
+        "transactionType"
+      ]
+    },
+    "BudgetSuggestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BudgetSuggestion",
+      "type": "object",
+      "description": "Represents a budget suggestion generated by the AI tool.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the budget suggestion entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N BudgetSuggestion)"
+        },
+        "dateGenerated": {
+          "type": "string",
+          "description": "The date the budget suggestion was generated.",
+          "format": "date-time"
+        },
+        "suggestedCategory": {
+          "type": "string",
+          "description": "The category for which the budget adjustment is suggested."
+        },
+        "suggestedAmount": {
+          "type": "number",
+          "description": "The suggested amount for the category."
+        },
+        "rationale": {
+          "type": "string",
+          "description": "The rationale behind the budget suggestion (e.g., recent overspending)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "dateGenerated",
+        "suggestedCategory",
+        "suggestedAmount",
+        "rationale"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. This collection uses path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/creditCards/{creditCardId}",
+        "definition": {
+          "entityName": "CreditCard",
+          "schema": {
+            "$ref": "#/backend/entities/CreditCard"
+          },
+          "description": "Stores credit card information for a specific user. This collection uses path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "creditCardId",
+              "description": "The unique identifier for the credit card."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/investmentAccounts/{investmentAccountId}",
+        "definition": {
+          "entityName": "InvestmentAccount",
+          "schema": {
+            "$ref": "#/backend/entities/InvestmentAccount"
+          },
+          "description": "Stores investment account information for a specific user. This collection uses path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "investmentAccountId",
+              "description": "The unique identifier for the investment account."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores transaction information for a specific user. This collection uses path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier for the transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/budgetSuggestions/{budgetSuggestionId}",
+        "definition": {
+          "entityName": "BudgetSuggestion",
+          "schema": {
+            "$ref": "#/backend/entities/BudgetSuggestion"
+          },
+          "description": "Stores budget suggestions generated by the AI tool for a specific user. This collection uses path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "budgetSuggestionId",
+              "description": "The unique identifier for the budget suggestion."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the Lime Wallet application's financial dashboard features, focusing on security, scalability, and ease of debugging. The core principle is Authorization Independence, achieved through denormalization. Path-based ownership is used for user-owned data.\n\nUsers: Each user has their own document under the `/users/{userId}` collection, storing their profile information.\n\nCredit Cards: Credit card data is stored under `/users/{userId}/creditCards/{creditCardId}`. This path-based ownership ensures that only the user can access their credit card information.\n\nInvestment Accounts: Investment account data is stored under `/users/{userId}/investmentAccounts/{investmentAccountId}`.  This path-based ownership ensures that only the user can access their investment account information.\n\nTransactions: Transaction data is stored under `/users/{userId}/transactions/{transactionId}`. Each transaction is associated with a specific user, ensuring proper ownership and access control. The `creditCardId` is stored on the transaction, and the path to the transaction enforces user-level ownership.\n\nBudget Suggestions: Budget suggestions generated by the AI tool are stored under `/users/{userId}/budgetSuggestions/{budgetSuggestionId}`. This ensures that each user can only access their own budget suggestions.\n\nThis structure facilitates simple and robust security rules because authorization checks can be performed based on the document path, without needing to retrieve data from other documents.  It directly supports QAPs via structural segregation."
+  }
+}
