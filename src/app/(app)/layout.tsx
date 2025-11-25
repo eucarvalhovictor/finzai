@@ -17,8 +17,7 @@ export default function AppLayout({
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <div /> {/* Empty div to keep alignment */}
+        <SidebarHeader className="justify-center">
           <SidebarTrigger />
         </SidebarHeader>
         <SidebarNav />
