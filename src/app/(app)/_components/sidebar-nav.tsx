@@ -11,7 +11,6 @@ import {
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRightLeft, CreditCard, LayoutDashboard, Sparkles, TrendingUp, PlusCircle, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -48,12 +47,12 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-             <Button asChild className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground">
+             <SidebarMenuButton asChild className="bg-primary hover:bg-primary/90 text-primary-foreground" tooltip="Adicionar Despesa">
                 <Link href="/transactions?action=add">
                     <PlusCircle />
                     <span>Adicionar Despesa</span>
                 </Link>
-             </Button>
+             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
              <SidebarMenuButton tooltip="Sair">
