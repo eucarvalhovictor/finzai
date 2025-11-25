@@ -101,12 +101,8 @@ export function SidebarNav() {
   );
   
   const filteredNavItems = navItems.filter(item => {
-    if (!item.role) return true; // Itens sem role são públicos
-    if (!userProfile) return false; // Se não carregou o perfil, esconde itens com role
-    // O item do admin deve corresponder ao início do caminho
-    if (item.href.startsWith('/admin')) {
-      return pathname.startsWith('/admin') && item.role.includes(userProfile.role);
-    }
+    if (!item.role) return true;
+    if (!userProfile) return false;
     return item.role.includes(userProfile.role);
   });
   
