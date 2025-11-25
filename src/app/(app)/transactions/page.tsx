@@ -14,25 +14,9 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Transaction } from '@/lib/types';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
   return (
@@ -75,48 +59,17 @@ function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
   );
 }
 
-const transactionCategories = ['Renda', 'Moradia', 'Alimentação', 'Transporte', 'Entretenimento', 'Saúde', 'Compras', 'Serviços'] as const;
-
-const transactionSchema = z.object({
-  description: z.string().min(1, 'Descrição é obrigatória'),
-  amount: z.coerce.number().positive('O valor deve ser um número positivo'),
-  category: z.enum(transactionCategories),
-});
-
-type TransactionFormValues = z.infer<typeof transactionSchema>;
 
 export default function TransactionsPage() {
+  // In a real app, this state would come from a global store or be fetched from an API
   const [transactions, setTransactions] = useState(allTransactions);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (searchParams.get('action') === 'add') {
-      setIsDialogOpen(true);
-    }
-  }, [searchParams]);
+  const handleAddTransactionClick = () => {
+    // This now just opens the dialog via a query param handled in the sidebar
+    router.push('/transactions?action=add', { scroll: false });
+  };
 
-  const form = useForm<TransactionFormValues>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      description: '',
-      amount: 0,
-    },
-  });
-
-  function onSubmit(data: TransactionFormValues) {
-    const newTransaction: Transaction = {
-      id: new Date().toISOString(),
-      date: new Date().toLocaleDateString('pt-BR'), 
-      description: data.description,
-      amount: data.category === 'Renda' ? data.amount : -data.amount,
-      category: data.category,
-      type: data.category === 'Renda' ? 'income' : 'expense',
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
-    form.reset();
-    setIsDialogOpen(false);
-  }
 
   const incomeTransactions = transactions.filter(t => t.type === 'income');
   const expenseTransactions = transactions.filter(t => t.type === 'expense');
@@ -127,79 +80,10 @@ export default function TransactionsPage() {
         title="Rendas & Despesas"
         description="Acompanhe todas as suas transações financeiras em um só lugar."
       >
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Adicionar Transação
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                <DialogHeader>
-                  <DialogTitle>Adicionar Nova Transação</DialogTitle>
-                  <DialogDescription>
-                    Preencha os detalhes da sua nova transação.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Descrição</FormLabel>
-                        <FormControl className="col-span-3">
-                          <Input placeholder="Ex: Café" {...field} />
-                        </FormControl>
-                        <FormMessage className="col-span-4 text-right" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Valor</FormLabel>
-                        <FormControl className="col-span-3">
-                          <Input type="number" placeholder="Ex: 5.50" {...field} />
-                        </FormControl>
-                        <FormMessage className="col-span-4 text-right" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Categoria</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl className="col-span-3">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione uma categoria" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {transactionCategories.map(cat => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="col-span-4 text-right" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button type="submit">Salvar Transação</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleAddTransactionClick}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar Transação
+        </Button>
       </PageHeader>
       
       <Tabs defaultValue="all">
