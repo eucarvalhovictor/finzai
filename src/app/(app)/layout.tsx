@@ -1,3 +1,5 @@
+'use client';
+
 import { AppLogo } from '@/components/app-logo';
 import {
   SidebarProvider,
@@ -8,16 +10,40 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { SidebarNav } from './_components/sidebar-nav';
+import { useUser } from '@/firebase';
+import { redirect } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="p-4 space-y-4">
+            <div className="flex justify-center">
+                <AppLogo />
+            </div>
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-8 w-60" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    redirect('/login');
+  }
+
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader className="p-2">
+        <SidebarHeader className="flex justify-center p-2">
           <SidebarTrigger />
         </SidebarHeader>
         <SidebarNav />
@@ -36,5 +62,3 @@ export default function AppLayout({
     </SidebarProvider>
   );
 }
-
-    
