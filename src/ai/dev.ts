@@ -3,8 +3,6 @@ import { config } from 'dotenv';
 config();
 
 import '@/ai/flows/ai-powered-budget-suggestions.ts';
-import { setVictorAsAdmin } from '@/ai/flows/set-user-role';
 
-// Para executar a função e definir o usuário como admin,
-// você pode chamar a função setVictorAsAdmin() aqui e executar o servidor de desenvolvimento do Genkit.
-setVictorAsAdmin(null).then(console.log).catch(console.error);
+// O fluxo para definir o cargo do usuário foi removido.
+// O gerenciamento de cargos agora é feito pela interface de administração.

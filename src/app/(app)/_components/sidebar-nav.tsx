@@ -19,6 +19,7 @@ import {
   PlusCircle,
   LogOut,
   UserCircle,
+  Shield,
 } from 'lucide-react';
 import {
   Dialog,
@@ -53,6 +54,7 @@ const navItems = [
   { href: '/transactions', label: 'Transações', icon: ArrowRightLeft },
   { href: '/budgeting', label: 'Consultor AI', icon: Sparkles, role: ['completo', 'admin'] },
   { href: '/profile', label: 'Perfil', icon: UserCircle },
+  { href: '/admin', label: 'Admin', icon: Shield, role: ['admin'] },
 ];
 
 export function SidebarNav() {

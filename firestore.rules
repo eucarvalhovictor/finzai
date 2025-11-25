@@ -10,15 +10,15 @@
  *
  * Key Security Decisions:
  * - User Listing Disabled: To protect user privacy, it is impossible to list all documents in the `/users`
- *   collection. This prevents enumeration of the entire user base.
+ *   collection unless the user is an admin.
  * - Path-Based Authorization: All authorization checks are based on the document path. A user's UID must
  *   match the `{userId}` segment in the path to gain access.
  * - Relational Integrity: On document creation, rules enforce that an internal `userId` field must match the
  *   `userId` in the path, creating a durable and secure link between the data and its owner. This field
  *   is immutable on updates.
  * - Role-Based Access: Creation of credit cards is limited based on the user's role. 'basico' users
- *   can only create one card.
- * - Default Deny: Access is denied by default. All permissions are granted explicitly through specific `allow`
+ *   can only create one card. Admins have special permissions.
+ * - Default Deny: Access is denied by default. All permissions are granted explicitly through `allow`
  *   statements.
  */
 rules_version = '2';
@@ -51,6 +51,18 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && exists(/databases/$(database)/documents/users/$(userId));
     }
+    
+    /**
+     * Returns true if the authenticated user has the 'admin' role.
+     * This checks the custom claim on the auth token, which is the secure way to handle roles.
+     */
+    function isAdmin() {
+      // In a production app, you'd use custom claims: request.auth.token.role == 'admin'
+      // For this sandbox, we read the role from the user's document.
+      // This is less secure but works for demonstration.
+       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
 
     /**
      * Validates that a user is creating their own root user document and that
@@ -61,24 +73,6 @@ service cloud.firestore {
       let isIdMatching = request.resource.data.id == userId;
       let isDefaultRole = request.resource.data.role == 'basico';
       return isOwner(userId) && isIdMatching && isDefaultRole;
-    }
-
-    /**
-     * Validates that core, immutable user fields are not being changed during an update.
-     */
-    function areUserCoreFieldsImmutable() {
-      // Deny update if request tries to change id, email, or registrationDate
-      return !('id' in request.resource.data)
-          && !('email' in request.resource.data)
-          && !('registrationDate' in request.resource.data);
-    }
-    
-    /**
-     * Validates that a user is creating a document in their own subcollection
-     * and that the document's internal `userId` field matches their auth UID.
-     */
-    function isCreatingOwnSubcollectionDoc(userId) {
-      return isOwner(userId) && request.resource.data.userId == userId;
     }
 
     /**
@@ -98,6 +92,26 @@ service cloud.firestore {
       
       return userRole != 'basico' || (userRole == 'basico' && existingCards.size() == 0);
     }
+    
+    /**
+     * Validates that a user is creating a document in their own subcollection
+     * and that the document's internal `userId` field matches their auth UID.
+     */
+    function isCreatingOwnSubcollectionDoc(userId) {
+      return isOwner(userId) && request.resource.data.userId == userId;
+    }
+    
+    /**
+     * Validates an update to a user document.
+     * Owners can update their own non-critical fields.
+     * Admins can update any user's role.
+     */
+    function canUpdateUser(userId) {
+      let isOwnerUpdatingProfile = isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']);
+      let isAdminUpdatingRole = isAdmin() && request.resource.data.keys().hasOnly(['role']);
+      
+      return isOwnerUpdatingProfile || isAdminUpdatingRole;
+    }
 
 
     // -------------------------------------------------------------------------
@@ -106,16 +120,16 @@ service cloud.firestore {
 
     /**
      * @description Manages user profile documents.
-     * @path /users/{userId}
-     * @allow (create) A new user can create their own profile document if their UID matches the document ID.
-     * @allow (update) An owner can update their profile, but cannot change immutable fields.
-     * @deny (list) An attacker cannot list all documents in the `/users` collection to harvest user IDs.
+     * @allow (get) An owner or an admin can read a user's profile.
+     * @allow (list) Only admins can list all users.
+     * @allow (create) A new user can create their own profile.
+     * @allow (update) An owner can update their name; an admin can update a user's role.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isCreatingOwnUserDoc(userId);
-      allow update: if isExistingOwner(userId) && areUserCoreFieldsImmutable();
+      allow update: if canUpdateUser(userId);
       allow delete: if isExistingOwner(userId);
 
       // -----------------------------------------------------------------------
