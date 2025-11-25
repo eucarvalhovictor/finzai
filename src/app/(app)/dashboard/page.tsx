@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import {
   Card,
@@ -28,6 +28,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const { user, firestore } = useFirebase();
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const getGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) return 'Bom dia';
+      if (hour < 18) return 'Boa tarde';
+      return 'Boa noite';
+    };
+    setGreeting(getGreeting());
+  }, []);
 
   const transactionsRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -46,7 +57,7 @@ export default function DashboardPage() {
     if (!allTransactions) {
       return {
         totalBalance: 0,
-        totalDebt: 0, // Placeholder, will be calculated from cards later
+        totalDebt: 0, 
         netWorth: 0,
         monthlyIncome: 0,
         monthlyExpenses: 0,
@@ -64,8 +75,8 @@ export default function DashboardPage() {
 
     return {
       totalBalance: totalBalance,
-      totalDebt: 0, // Placeholder
-      netWorth: totalBalance, // Placeholder
+      totalDebt: 0, 
+      netWorth: totalBalance, 
       monthlyIncome: income,
       monthlyExpenses: expenses,
     };
@@ -85,10 +96,12 @@ export default function DashboardPage() {
     </Card>
   );
 
+  const userName = user?.displayName || 'Usuário';
+
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Visão Geral Financeira"
+        title={`${greeting}, ${userName}`}
         description="Aqui está um resumo do seu status financeiro atual."
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -209,5 +222,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

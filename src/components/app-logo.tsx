@@ -5,7 +5,7 @@ export function AppLogo() {
     <div className="flex items-center gap-2 text-primary">
       <Wallet className="h-7 w-7" />
       <h1 className="text-xl font-bold text-foreground">
-        Lime Wallet
+        FinzAI
       </h1>
     </div>
   );

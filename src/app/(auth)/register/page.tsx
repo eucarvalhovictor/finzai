@@ -13,15 +13,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useFirebase, setDocumentNonBlocking } from '@/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { doc, serverTimestamp } from 'firebase/firestore';
 
 
 export default function RegisterPage() {
   const { register, handleSubmit } = useForm();
   const router = useRouter();
-  const auth = useAuth();
+  const { auth, firestore } = useFirebase();
   const { toast } = useToast();
 
   const onSubmit = async (data: any) => {
@@ -34,7 +35,24 @@ export default function RegisterPage() {
       return;
     }
     try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+      
+      // Update Firebase Auth profile
+      await updateProfile(user, {
+        displayName: `${data.firstName} ${data.lastName}`
+      });
+
+      // Create user document in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
+      setDocumentNonBlocking(userDocRef, {
+        id: user.uid,
+        email: user.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        registrationDate: serverTimestamp(),
+      }, { merge: false });
+
       router.push('/dashboard');
     } catch (error: any) {
        toast({
@@ -55,9 +73,15 @@ export default function RegisterPage() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="first-name">Nome</Label>
-            <Input id="first-name" placeholder="Seu nome" required {...register('name')} />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="first-name">Nome</Label>
+              <Input id="first-name" placeholder="Seu nome" required {...register('firstName')} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="last-name">Sobrenome</Label>
+              <Input id="last-name" placeholder="Seu sobrenome" required {...register('lastName')} />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">E-mail</Label>
