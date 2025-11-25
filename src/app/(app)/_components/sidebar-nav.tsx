@@ -20,6 +20,7 @@ import {
   LogOut,
   UserCircle,
   Shield,
+  ChevronDown
 } from 'lucide-react';
 import {
   Dialog,
@@ -37,6 +38,13 @@ import {
   SheetDescription,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
@@ -53,7 +61,6 @@ const navItems = [
   { href: '/investments', label: 'Investimentos', icon: TrendingUp },
   { href: '/transactions', label: 'Transações', icon: ArrowRightLeft },
   { href: '/budgeting', label: 'Consultor AI', icon: Sparkles, role: ['completo', 'admin'] },
-  { href: '/profile', label: 'Perfil', icon: UserCircle },
   { href: '/admin/metrics', label: 'Admin', icon: Shield, role: ['admin'] },
 ];
 
@@ -102,6 +109,10 @@ export function SidebarNav() {
     }
     return item.role.includes(userProfile.role);
   });
+  
+  const getInitials = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
 
   return (
     <>
@@ -153,12 +164,35 @@ export function SidebarNav() {
               </Dialog>
             )}
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} tooltip="Sair">
-                <LogOut className="text-destructive" />
-                <span className="text-destructive">Sair</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+           <SidebarSeparator />
+           <SidebarMenuItem>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-3 w-full text-left p-2 rounded-md hover:bg-sidebar-accent transition-colors">
+                        <Avatar className="w-8 h-8">
+                            <AvatarImage src={userProfile?.photoURL} />
+                            <AvatarFallback>{userProfile?.firstName ? getInitials(userProfile.firstName) : 'U'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+                            <p className="font-medium text-sm truncate">{userProfile?.firstName || 'Usuário'}</p>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
+                    <DropdownMenuItem asChild>
+                       <Link href="/profile">
+                          <UserCircle className="mr-2 h-4 w-4" />
+                          <span>Meu Perfil</span>
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sair</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </>

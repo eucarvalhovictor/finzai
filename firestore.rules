@@ -51,6 +51,15 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && exists(/databases/$(database)/documents/users/$(userId));
     }
+    
+     /**
+     * Returns true if the user is an administrator by checking their role in their own document.
+     * This is the correct way to check for admin privileges in security rules.
+     */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
 
     /**
      * Validates that a user is creating their own root user document and that
@@ -59,8 +68,9 @@ service cloud.firestore {
      */
     function isCreatingOwnUserDoc(userId) {
       let isIdMatching = request.resource.data.id == userId;
-      let isRoleValid = request.resource.data.role == 'basico' || request.resource.data.role == 'admin';
-      return isOwner(userId) && isIdMatching && isRoleValid;
+      // Allow admin to create users with any role, otherwise default to 'basico'
+      let isRoleValid = (isAdmin() && request.resource.data.role in ['basico', 'completo', 'admin']) || (request.resource.data.role == 'basico');
+      return (isOwner(userId) || isAdmin()) && isIdMatching && isRoleValid;
     }
     
     /**
@@ -103,14 +113,13 @@ service cloud.firestore {
      * @allow (update) An owner can update their name; an admin can update a user's role.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId) || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-      allow list: if (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') || request.query.limit <= 1;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin() || request.query.limit <= 1;
       allow create: if isCreatingOwnUserDoc(userId);
-      // Owners can update their firstName and lastName
-      // Admins can update a user's role.
-      allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']))
-                      || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && request.resource.data.keys().hasOnly(['role']));
-      allow delete: if isExistingOwner(userId);
+      // Owners can update their own profile. Admins can update any user's role.
+      allow update: if (isOwner(userId) && request.resource.data.keys().hasAll(['firstName', 'lastName', 'photoURL'])) 
+                      || (isAdmin() && request.resource.data.keys().hasOnly(['role']));
+      allow delete: if isAdmin();
 
       // -----------------------------------------------------------------------
       // User Subcollections

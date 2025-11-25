@@ -12,24 +12,29 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect } from 'react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useEffect, useState, ChangeEvent } from 'react';
+import { Upload } from 'lucide-react';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'O nome é obrigatório.'),
-  lastName: z.string().min(1, 'O sobrenome é obrigatório.'),
+  lastName: z.string().optional(),
+  photoURL: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 type UserProfile = {
   firstName: string;
-  lastName: string;
+  lastName?: string;
   email: string;
+  photoURL?: string;
 }
 
 export function UserProfileForm() {
   const { user, firestore, auth } = useFirebase();
   const { toast } = useToast();
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -43,6 +48,7 @@ export function UserProfileForm() {
     defaultValues: {
       firstName: '',
       lastName: '',
+      photoURL: '',
     },
   });
 
@@ -50,25 +56,45 @@ export function UserProfileForm() {
     if (userProfile) {
       form.reset({
         firstName: userProfile.firstName,
-        lastName: userProfile.lastName,
+        lastName: userProfile.lastName || '',
+        photoURL: userProfile.photoURL || '',
       });
+      setPhotoPreview(userProfile.photoURL || null);
     }
   }, [userProfile, form]);
+  
+  const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const dataUrl = reader.result as string;
+            setPhotoPreview(dataUrl);
+            form.setValue('photoURL', dataUrl);
+        };
+        reader.readAsDataURL(file);
+    }
+  };
+
 
   async function onSubmit(data: ProfileFormValues) {
     if (!user || !userDocRef) return;
 
     try {
-      // Update Firestore document
-      updateDocumentNonBlocking(userDocRef, {
+      const updatedData: Partial<UserProfile> = {
         firstName: data.firstName,
         lastName: data.lastName,
-      });
+        photoURL: data.photoURL,
+      };
+
+      // Update Firestore document
+      updateDocumentNonBlocking(userDocRef, updatedData);
       
       // Update Firebase Auth profile
       if (auth.currentUser) {
         await updateProfile(auth.currentUser, {
-          displayName: `${data.firstName} ${data.lastName}`
+          displayName: `${data.firstName} ${data.lastName || ''}`.trim(),
+          photoURL: data.photoURL,
         });
       }
 
@@ -106,13 +132,37 @@ export function UserProfileForm() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Informações Pessoais</CardTitle>
-        <CardDescription>Atualize seu nome e sobrenome.</CardDescription>
-      </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
+           <CardHeader>
+            <CardTitle>Informações Pessoais</CardTitle>
+            <CardDescription>Atualize seu nome, sobrenome e foto de perfil.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+             <FormField
+                control={form.control}
+                name="photoURL"
+                render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Foto de Perfil</FormLabel>
+                   <div className="flex items-center gap-4">
+                      <Avatar className="h-20 w-20">
+                         <AvatarImage src={photoPreview || undefined} />
+                         <AvatarFallback>
+                            {userProfile?.firstName ? userProfile.firstName.charAt(0).toUpperCase() : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Button asChild variant="outline">
+                         <label htmlFor="photo-upload" className="cursor-pointer">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Carregar Imagem
+                            <Input id="photo-upload" type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
+                         </label>
+                      </Button>
+                   </div>
+                </FormItem>
+                )}
+            />
             <div className="grid sm:grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
@@ -158,5 +208,3 @@ export function UserProfileForm() {
     </Card>
   );
 }
-
-    

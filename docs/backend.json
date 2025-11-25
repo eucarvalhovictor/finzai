@@ -32,13 +32,17 @@
             "type": "string",
             "description": "The user's role in the application.",
             "enum": ["basico", "completo", "admin"]
+        },
+        "photoURL": {
+            "type": "string",
+            "description": "URL of the user's profile picture.",
+            "format": "uri"
         }
       },
       "required": [
         "id",
         "email",
         "firstName",
-        "lastName",
         "registrationDate",
         "role"
       ]
