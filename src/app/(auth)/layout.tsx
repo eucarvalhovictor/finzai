@@ -1,4 +1,5 @@
 import { AppLogo } from '@/components/app-logo';
+import { DotsBackground } from '@/components/ui/dots-background';
 
 export default function AuthLayout({
   children,
@@ -6,11 +7,14 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="mb-8">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 relative">
+      <DotsBackground />
+      <div className="mb-8 z-10">
         <AppLogo />
       </div>
-      {children}
+      <div className="z-10 w-full">
+        {children}
+      </div>
     </div>
   );
 }

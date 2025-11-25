@@ -62,8 +62,12 @@ export function SidebarNav() {
   };
   
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
   };
 
   const AddTransactionButton = (
@@ -137,5 +141,3 @@ export function SidebarNav() {
     </>
   );
 }
-
-    

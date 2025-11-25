@@ -57,15 +57,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="grid gap-2">
-            <div className="flex items-center">
-              <Label htmlFor="password">Senha</Label>
-              <Link
-                href="#"
-                className="ml-auto inline-block text-sm underline"
-              >
-                Esqueceu sua senha?
-              </Link>
-            </div>
+            <Label htmlFor="password">Senha</Label>
             <Input
               id="password"
               type="password"
@@ -76,6 +68,14 @@ export default function LoginPage() {
           <Button type="submit" className="w-full">
             Entrar
           </Button>
+           <div className="text-center text-sm">
+              <Link
+                href="#"
+                className="inline-block underline"
+              >
+                Esqueceu sua senha?
+              </Link>
+            </div>
         </form>
         <div className="mt-4 text-center text-sm">
           Não tem uma conta?{' '}
