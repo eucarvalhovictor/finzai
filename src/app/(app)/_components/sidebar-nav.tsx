@@ -18,6 +18,7 @@ import {
   TrendingUp,
   PlusCircle,
   LogOut,
+  UserCircle,
 } from 'lucide-react';
 import {
   Dialog,
@@ -48,6 +49,7 @@ const navItems = [
   { href: '/investments', label: 'Investimentos', icon: TrendingUp },
   { href: '/transactions', label: 'Transações', icon: ArrowRightLeft },
   { href: '/budgeting', label: 'Consultor AI', icon: Sparkles },
+  { href: '/profile', label: 'Perfil', icon: UserCircle },
 ];
 
 export function SidebarNav() {
