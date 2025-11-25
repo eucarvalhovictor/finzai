@@ -1,20 +1,25 @@
+import type { Timestamp } from 'firebase/firestore';
+
 export type Transaction = {
   id: string;
-  date: string;
+  date: Timestamp;
   description: string;
   amount: number;
   category: 'Renda' | 'Moradia' | 'Alimentação' | 'Transporte' | 'Entretenimento' | 'Saúde' | 'Compras' | 'Serviços' | 'Outros';
-  type: 'income' | 'expense';
+  transactionType: 'income' | 'expense';
+  userId: string;
+  paymentMethod: 'cash' | 'pix' | 'card';
+  creditCardId?: string | null;
 };
 
 export type CreditCard = {
   id: string;
-  name: string;
-  last4: string;
+  userId: string;
+  cardNumber: string;
+  expiryDate: string;
+  cardHolderName: string;
   balance: number;
-  limit: number;
-  dueDate: string;
-  transactions: Transaction[];
+  creditLimit: number;
 };
 
 export type Investment = {
@@ -36,3 +41,5 @@ export type AssetAllocation = {
   type: string;
   value: number;
 };
+
+    

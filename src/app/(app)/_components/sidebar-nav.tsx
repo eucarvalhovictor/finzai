@@ -36,7 +36,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useState } from 'react';
-import type { CreditCard as CreditCardType } from '@/lib/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
 import { useAuth } from '@/firebase';
@@ -57,12 +56,6 @@ export function SidebarNav() {
   const isMobile = useIsMobile();
   const auth = useAuth();
   const router = useRouter();
-  
-  // Fake credit card data. In a real app, this would come from a global state or API.
-  const [creditCards, setCreditCards] = useState<CreditCardType[]>([
-      { id: '1', name: 'Cartão Principal', last4: '1234', balance: 0, limit: 5000, dueDate: '', transactions: [] },
-      { id: '2', name: 'Cartão Secundário', last4: '5678', balance: 0, limit: 3000, dueDate: '', transactions: [] }
-  ]);
 
   const handleTransactionSaved = () => {
     setIsDialogOpen(false);
@@ -114,7 +107,7 @@ export function SidebarNav() {
                       <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
                     </SheetHeader>
                     <div className="py-4">
-                      <TransactionForm creditCards={creditCards} onTransactionSaved={handleTransactionSaved} />
+                      <TransactionForm onTransactionSaved={handleTransactionSaved} />
                     </div>
                 </SheetContent>
               </Sheet>
@@ -128,7 +121,7 @@ export function SidebarNav() {
                       <DialogTitle>Adicionar Nova Transação</DialogTitle>
                       <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
                     </DialogHeader>
-                    <TransactionForm creditCards={creditCards} onTransactionSaved={handleTransactionSaved} />
+                    <TransactionForm onTransactionSaved={handleTransactionSaved} />
                 </DialogContent>
               </Dialog>
             )}
@@ -144,3 +137,5 @@ export function SidebarNav() {
     </>
   );
 }
+
+    

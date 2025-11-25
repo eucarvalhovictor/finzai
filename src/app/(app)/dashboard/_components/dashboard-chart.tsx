@@ -8,16 +8,9 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
-import { financialSummary } from '@/lib/data';
-
-const chartData = [
-  { month: "Janeiro", income: 0, expenses: 0 },
-  { month: "Fevereiro", income: 0, expenses: 0 },
-  { month: "Março", income: 0, expenses: 0 },
-  { month: "Abril", income: 0, expenses: 0 },
-  { month: "Maio", income: 0, expenses: 0 },
-  { month: "Junho", income: financialSummary.monthlyIncome, expenses: Math.abs(financialSummary.monthlyExpenses) },
-]
+import { useMemo } from "react";
+import type { Transaction } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const chartConfig = {
   income: {
@@ -30,7 +23,57 @@ const chartConfig = {
   },
 }
 
-export function DashboardChart() {
+interface DashboardChartProps {
+    transactions: Transaction[] | null;
+    isLoading: boolean;
+}
+
+export function DashboardChart({ transactions, isLoading }: DashboardChartProps) {
+
+    const chartData = useMemo(() => {
+        const data = [
+            { month: "Jan", income: 0, expenses: 0 },
+            { month: "Fev", income: 0, expenses: 0 },
+            { month: "Mar", income: 0, expenses: 0 },
+            { month: "Abr", income: 0, expenses: 0 },
+            { month: "Mai", income: 0, expenses: 0 },
+            { month: "Jun", income: 0, expenses: 0 },
+            { month: "Jul", income: 0, expenses: 0 },
+            { month: "Ago", income: 0, expenses: 0 },
+            { month: "Set", income: 0, expenses: 0 },
+            { month: "Out", income: 0, expenses: 0 },
+            { month: "Nov", income: 0, expenses: 0 },
+            { month: "Dez", income: 0, expenses: 0 },
+        ];
+
+        if (transactions) {
+            transactions.forEach(t => {
+                let monthIndex = -1;
+                if (t.date && t.date.toDate) { // Check if it's a Firestore Timestamp
+                    monthIndex = t.date.toDate().getMonth();
+                }
+
+                if (monthIndex !== -1) {
+                    if (t.transactionType === 'income') {
+                        data[monthIndex].income += t.amount;
+                    } else {
+                        data[monthIndex].expenses += Math.abs(t.amount);
+                    }
+                }
+            });
+        }
+        
+        // Return only up to the current month for a cleaner look
+        const currentMonthIndex = new Date().getMonth();
+        return data.slice(0, currentMonthIndex + 1);
+
+    }, [transactions]);
+
+
+    if (isLoading) {
+        return <Skeleton className="h-[250px] w-full" />
+    }
+
     return (
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -47,3 +90,5 @@ export function DashboardChart() {
         </ChartContainer>
     )
 }
+
+    

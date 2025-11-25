@@ -9,16 +9,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { transactions as allTransactions, formatCurrency } from '@/lib/data';
+import { formatCurrency, formatFirebaseTimestamp } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
-import type { Transaction } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
+import type { Transaction } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
+
+function TransactionsTable({ transactions, isLoading }: { transactions: Transaction[] | null, isLoading: boolean }) {
   return (
     <Card>
       <CardContent className="p-0">
@@ -32,16 +36,25 @@ function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.length > 0 ? (
+            {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-28" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-5 w-16" /></TableCell>
+                    </TableRow>
+                ))
+            ) : transactions && transactions.length > 0 ? (
               transactions.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell className="font-medium">{transaction.description}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge variant="outline">{transaction.category}</Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{transaction.date}</TableCell>
-                <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-primary' : ''}`}>
-                  {transaction.type === 'expense' && '-'}{formatCurrency(Math.abs(transaction.amount))}
+                <TableCell className="hidden md:table-cell">{formatFirebaseTimestamp(transaction.date)}</TableCell>
+                <TableCell className={`text-right font-medium ${transaction.transactionType === 'income' ? 'text-primary' : ''}`}>
+                  {transaction.transactionType === 'expense' && '-'}{formatCurrency(Math.abs(transaction.amount))}
                 </TableCell>
               </TableRow>
             ))
@@ -61,18 +74,19 @@ function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
 
 
 export default function TransactionsPage() {
-  // In a real app, this state would come from a global store or be fetched from an API
-  const [transactions, setTransactions] = useState(allTransactions);
   const router = useRouter();
+  const { user, firestore } = useFirebase();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleAddTransactionClick = () => {
-    // This now just opens the dialog via a query param handled in the sidebar
-    router.push(`?action=add`, { scroll: false });
-  };
+  const transactionsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, `users/${user.uid}/transactions`), orderBy('date', 'desc'));
+  }, [user, firestore]);
 
+  const { data: transactions, isLoading } = useCollection<Transaction>(transactionsQuery);
 
-  const incomeTransactions = transactions.filter(t => t.type === 'income');
-  const expenseTransactions = transactions.filter(t => t.type === 'expense');
+  const incomeTransactions = transactions?.filter(t => t.transactionType === 'income') || [];
+  const expenseTransactions = transactions?.filter(t => t.transactionType === 'expense') || [];
 
   return (
     <div className="grid gap-6">
@@ -80,10 +94,7 @@ export default function TransactionsPage() {
         title="Rendas & Despesas"
         description="Acompanhe todas as suas transações financeiras em um só lugar."
       >
-        <Button onClick={handleAddTransactionClick}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Adicionar Transação
-        </Button>
+        {/* O botão de adicionar transação está agora na sidebar, mas podemos manter um aqui se desejado */}
       </PageHeader>
       
       <Tabs defaultValue="all">
@@ -93,15 +104,17 @@ export default function TransactionsPage() {
           <TabsTrigger value="expenses">Despesas</TabsTrigger>
         </TabsList>
         <TabsContent value="all">
-          <TransactionsTable transactions={transactions} />
+          <TransactionsTable transactions={transactions} isLoading={isLoading} />
         </TabsContent>
         <TabsContent value="income">
-          <TransactionsTable transactions={incomeTransactions} />
+          <TransactionsTable transactions={incomeTransactions} isLoading={isLoading} />
         </TabsContent>
         <TabsContent value="expenses">
-          <TransactionsTable transactions={expenseTransactions} />
+          <TransactionsTable transactions={expenseTransactions} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+    

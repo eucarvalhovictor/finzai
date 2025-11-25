@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import type { Transaction, CreditCard as CreditCardType } from '@/lib/types';
-import { transactions as allTransactions } from '@/lib/data'; // This will be replaced by a global state management later
+import { useFirebase, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { CreditCard } from '@/lib/types';
+import { serverTimestamp } from 'firebase/firestore';
 
 const transactionCategories = [
   'Moradia',
@@ -25,7 +27,7 @@ const transactionCategories = [
 const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.coerce.number().positive('O valor deve ser um número positivo'),
-  type: z.enum(['income', 'expense'], { required_error: 'Selecione o tipo.' }),
+  transactionType: z.enum(['income', 'expense'], { required_error: 'Selecione o tipo.' }),
   category: z.string().min(1, 'Selecione uma categoria.'),
   paymentMethod: z.enum(['cash', 'pix', 'card'], { required_error: 'Selecione o método.' }),
   creditCardId: z.string().optional(),
@@ -42,43 +44,52 @@ const transactionSchema = z.object({
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
 interface TransactionFormProps {
-    creditCards: CreditCardType[];
     onTransactionSaved: () => void;
 }
 
-export function TransactionForm({ creditCards, onTransactionSaved }: TransactionFormProps) {
+export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
+  const { firestore, user } = useFirebase();
+
+  const creditCardsRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `users/${user.uid}/creditCards`);
+  }, [firestore, user]);
+  const { data: creditCards, isLoading: isLoadingCards } = useCollection<CreditCard>(creditCardsRef);
+
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       description: '',
       amount: 0,
-      type: 'expense',
+      transactionType: 'expense',
       paymentMethod: 'cash',
     },
   });
 
   const paymentMethod = form.watch('paymentMethod');
-  const transactionType = form.watch('type');
-
-  function onSubmit(data: TransactionFormValues) {
-    const finalAmount = data.type === 'income' ? data.amount : -data.amount;
-    const finalCategory = data.type === 'income' ? 'Renda' : data.category;
-
-    const newTransaction: Transaction = {
-      id: new Date().toISOString(),
-      date: new Date().toLocaleDateString('pt-BR'),
-      description: data.description,
-      amount: finalAmount,
-      // @ts-ignore - We know this is valid
-      category: finalCategory,
-      type: data.type,
-    };
-    
-    console.log('Nova transação adicionada (localmente):', newTransaction);
-    if(data.paymentMethod === 'card') {
-        console.log('Cartão de Crédito ID:', data.creditCardId);
+  const transactionType = form.watch('transactionType');
+  
+  async function onSubmit(data: TransactionFormValues) {
+    if (!firestore || !user) {
+        console.error("Firestore or user not available");
+        return;
     }
-    
+
+    const transactionsCollection = collection(firestore, `users/${user.uid}/transactions`);
+
+    const newTransactionData = {
+        userId: user.uid,
+        description: data.description,
+        amount: data.transactionType === 'income' ? data.amount : -data.amount,
+        category: data.transactionType === 'income' ? 'Renda' : data.category,
+        transactionType: data.transactionType,
+        paymentMethod: data.paymentMethod,
+        creditCardId: data.creditCardId || null,
+        date: serverTimestamp(),
+    };
+
+    addDocumentNonBlocking(transactionsCollection, newTransactionData);
+
     form.reset();
     onTransactionSaved();
   }
@@ -89,7 +100,7 @@ export function TransactionForm({ creditCards, onTransactionSaved }: Transaction
         <div className="space-y-4">
            <FormField
             control={form.control}
-            name="type"
+            name="transactionType"
             render={({ field }) => (
               <FormItem className="space-y-3">
                 <FormLabel>Tipo de Transação</FormLabel>
@@ -210,16 +221,16 @@ export function TransactionForm({ creditCards, onTransactionSaved }: Transaction
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cartão de Crédito</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCards}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o cartão" />
+                        <SelectValue placeholder={isLoadingCards ? "Carregando..." : "Selecione o cartão"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {creditCards.map((card) => (
+                      {creditCards?.map((card) => (
                         <SelectItem key={card.id} value={card.id}>
-                          {card.name} (final {card.last4})
+                          {card.cardHolderName} (final {card.cardNumber.slice(-4)})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -238,3 +249,5 @@ export function TransactionForm({ creditCards, onTransactionSaved }: Transaction
     </Form>
   );
 }
+
+    
