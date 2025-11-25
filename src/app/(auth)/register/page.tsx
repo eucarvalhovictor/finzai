@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { useFirebase, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, getDocs, query, limit } from 'firebase/firestore';
 
 
 export default function RegisterPage() {
@@ -34,7 +34,21 @@ export default function RegisterPage() {
       });
       return;
     }
+    if (!firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Configuração',
+        description: 'O serviço de banco de dados não está disponível.',
+      });
+      return;
+    }
     try {
+      // Verifica se já existem usuários para definir o primeiro como admin
+      const usersCollectionRef = collection(firestore, 'users');
+      const q = query(usersCollectionRef, limit(1));
+      const existingUsersSnapshot = await getDocs(q);
+      const isFirstUser = existingUsersSnapshot.empty;
+
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       
@@ -42,6 +56,9 @@ export default function RegisterPage() {
       await updateProfile(user, {
         displayName: `${data.firstName} ${data.lastName}`
       });
+
+      // Define o cargo: 'admin' para o primeiro usuário, 'basico' para os demais
+      const userRole = isFirstUser ? 'admin' : 'basico';
 
       // Create user document in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
@@ -51,8 +68,15 @@ export default function RegisterPage() {
         firstName: data.firstName,
         lastName: data.lastName,
         registrationDate: serverTimestamp(),
-        role: 'basico', // Define o cargo padrão como 'basico'
+        role: userRole,
       }, { merge: false });
+
+      if(isFirstUser) {
+        toast({
+          title: 'Conta de Administrador Criada!',
+          description: 'Você foi definido como o primeiro administrador do sistema.',
+        });
+      }
 
       router.push('/dashboard');
     } catch (error: any) {
