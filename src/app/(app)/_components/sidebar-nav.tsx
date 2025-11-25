@@ -36,7 +36,7 @@ export function SidebarNav() {
                 tooltip={item.label}
               >
                 <Link href={item.href}>
-                  <item.icon className="text-primary" />
+                  <item.icon />
                   <span>{item.label}</span>
                 </Link>
               </SidebarMenuButton>
