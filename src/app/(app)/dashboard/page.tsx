@@ -21,10 +21,16 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatFirebaseTimestamp } from '@/lib/data';
 import { DollarSign, Wallet, Landmark } from 'lucide-react';
 import { DashboardChart } from './_components/dashboard-chart';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import type { Transaction } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+
+type UserProfile = {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 export default function DashboardPage() {
   const { user, firestore } = useFirebase();
@@ -39,6 +45,12 @@ export default function DashboardPage() {
     };
     setGreeting(getGreeting());
   }, []);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [user, firestore]);
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
 
   const transactionsRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -57,31 +69,36 @@ export default function DashboardPage() {
     if (!allTransactions) {
       return {
         totalBalance: 0,
-        totalDebt: 0, 
+        totalDebt: 0,
         netWorth: 0,
         monthlyIncome: 0,
         monthlyExpenses: 0,
       };
     }
-    const income = allTransactions
-      .filter(t => t.transactionType === 'income')
-      .reduce((acc, t) => acc + t.amount, 0);
+    
+    const summary = allTransactions.reduce((acc, t) => {
+        if (t.transactionType === 'income') {
+            acc.income += t.amount;
+        } else {
+            // Expenses are stored as negative values
+            acc.expenses += t.amount;
+        }
+        return acc;
+    }, { income: 0, expenses: 0 });
 
-    const expenses = allTransactions
-      .filter(t => t.transactionType === 'expense')
-      .reduce((acc, t) => acc + t.amount, 0);
-      
-    const totalBalance = income + expenses; // expenses are negative
+    const totalBalance = summary.income + summary.expenses;
 
     return {
       totalBalance: totalBalance,
-      totalDebt: 0, 
-      netWorth: totalBalance, 
-      monthlyIncome: income,
-      monthlyExpenses: expenses,
+      totalDebt: 0, // Placeholder for credit card debt
+      netWorth: totalBalance, // Placeholder, will include investments later
+      monthlyIncome: summary.income,
+      monthlyExpenses: summary.expenses,
     };
 
   }, [allTransactions]);
+
+  const isLoading = isLoadingAll || isLoadingProfile;
 
   const CardSkeleton = () => (
     <Card>
@@ -96,16 +113,16 @@ export default function DashboardPage() {
     </Card>
   );
 
-  const userName = user?.displayName || 'Usuário';
+  const userName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : (user?.displayName || 'Usuário');
 
   return (
     <div className="grid gap-6">
       <PageHeader
-        title={`${greeting}, ${userName}`}
+        title={isLoadingProfile ? 'Carregando...' : `${greeting}, ${userName}`}
         description="Aqui está um resumo do seu status financeiro atual."
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {isLoadingAll ? (
+        {isLoading ? (
           <>
             <CardSkeleton />
             <CardSkeleton />
@@ -203,7 +220,7 @@ export default function DashboardPage() {
                       <TableCell>
                         <Badge variant="outline">{transaction.category}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right font-medium ${transaction.transactionType === 'income' ? 'text-primary' : 'text-destructive'}`}>
+                      <TableCell className={`text-right font-medium ${transaction.transactionType === 'income' ? 'text-primary' : 'text-foreground'}`}>
                         {formatCurrency(transaction.amount)}
                       </TableCell>
                     </TableRow>
