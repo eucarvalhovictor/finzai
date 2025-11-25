@@ -8,7 +8,7 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowRightLeft,
@@ -35,8 +35,7 @@ import {
   SheetDescription,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { CreditCard as CreditCardType } from '@/lib/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
@@ -51,7 +50,6 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
   
@@ -60,24 +58,6 @@ export function SidebarNav() {
       { id: '1', name: 'Cartão Principal', last4: '1234', balance: 0, limit: 5000, dueDate: '', transactions: [] },
       { id: '2', name: 'Cartão Secundário', last4: '5678', balance: 0, limit: 3000, dueDate: '', transactions: [] }
   ]);
-
-  useEffect(() => {
-    // Open dialog if 'action=add' is in the URL, and close it when navigating away
-    const shouldOpen = searchParams.get('action') === 'add';
-    if (isDialogOpen !== shouldOpen) {
-      setIsDialogOpen(shouldOpen);
-    }
-  }, [searchParams, isDialogOpen]);
-
-  const onOpenChange = (open: boolean) => {
-    setIsDialogOpen(open);
-    // If we are closing the dialog, remove the query param
-    if (!open) {
-      const newParams = new URLSearchParams(searchParams.toString());
-      newParams.delete('action');
-      window.history.replaceState({}, '', `${pathname}?${newParams.toString()}`);
-    }
-  };
 
   const handleTransactionSaved = () => {
     setIsDialogOpen(false);
@@ -114,7 +94,7 @@ export function SidebarNav() {
         <SidebarMenu>
           <SidebarMenuItem>
            {isMobile ? (
-              <Sheet open={isDialogOpen} onOpenChange={onOpenChange}>
+              <Sheet open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <SheetTrigger asChild>
                   {AddTransactionButton}
                 </SheetTrigger>
@@ -129,7 +109,7 @@ export function SidebarNav() {
                 </SheetContent>
               </Sheet>
             ) : (
-              <Dialog open={isDialogOpen} onOpenChange={onOpenChange}>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   {AddTransactionButton}
                 </DialogTrigger>
