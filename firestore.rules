@@ -53,11 +53,11 @@ service cloud.firestore {
     }
     
     /**
-     * Returns true if the authenticated user has the 'admin' role.
-     * This checks the user's custom claim on their auth token.
+     * Returns true if the authenticated user has the 'admin' role by reading their user document.
+     * This function should only be used in contexts where a read operation is permitted.
      */
     function isAdmin() {
-       return isSignedIn() && request.auth.token.role == 'admin';
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
 
@@ -114,7 +114,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       // Allow listing for admins OR if the query is just checking for the first user
-      allow list: if isAdmin() || request.query.limit <= 1;
+      allow list: if (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') || request.query.limit <= 1;
       allow create: if isCreatingOwnUserDoc(userId);
       // Owners can update their firstName and lastName
       // Admins can update a user's role.
