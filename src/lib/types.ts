@@ -3,7 +3,7 @@ export type Transaction = {
   date: string;
   description: string;
   amount: number;
-  category: 'Renda' | 'Moradia' | 'Alimentação' | 'Transporte' | 'Entretenimento' | 'Saúde' | 'Compras' | 'Serviços';
+  category: 'Renda' | 'Moradia' | 'Alimentação' | 'Transporte' | 'Entretenimento' | 'Saúde' | 'Compras' | 'Serviços' | 'Outros';
   type: 'income' | 'expense';
 };
 

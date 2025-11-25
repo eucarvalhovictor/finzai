@@ -30,13 +30,14 @@ import {
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useEffect } from 'react';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, CreditCard as CreditCardType } from '@/lib/types';
 import { transactions as allTransactions } from '@/lib/data'; // This will be replaced by a global state management later
 
 const navItems = [
@@ -48,7 +49,6 @@ const navItems = [
 ];
 
 const transactionCategories = [
-  'Renda',
   'Moradia',
   'Alimentação',
   'Transporte',
@@ -56,13 +56,26 @@ const transactionCategories = [
   'Saúde',
   'Compras',
   'Serviços',
+  'Outros',
 ] as const;
 
 const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.coerce.number().positive('O valor deve ser um número positivo'),
-  category: z.enum(transactionCategories),
+  type: z.enum(['income', 'expense'], { required_error: 'Selecione o tipo.' }),
+  category: z.string().min(1, 'Selecione uma categoria.'),
+  paymentMethod: z.enum(['cash', 'pix', 'card'], { required_error: 'Selecione o método.' }),
+  creditCardId: z.string().optional(),
+}).refine(data => {
+  if (data.paymentMethod === 'card') {
+    return !!data.creditCardId;
+  }
+  return true;
+}, {
+  message: 'Selecione um cartão de crédito.',
+  path: ['creditCardId'],
 });
+
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
@@ -70,6 +83,12 @@ export function SidebarNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Fake credit card data. In a real app, this would come from a global state or API.
+  const [creditCards, setCreditCards] = useState<CreditCardType[]>([
+      { id: '1', name: 'Cartão Principal', last4: '1234', balance: 0, limit: 5000, dueDate: '', transactions: [] },
+      { id: '2', name: 'Cartão Secundário', last4: '5678', balance: 0, limit: 3000, dueDate: '', transactions: [] }
+  ]);
 
   useEffect(() => {
     if (searchParams.get('action') === 'add') {
@@ -82,25 +101,33 @@ export function SidebarNav() {
     defaultValues: {
       description: '',
       amount: 0,
+      type: 'expense',
+      paymentMethod: 'cash',
     },
   });
 
-  // Note: This state management is local. For a real app, use a global state manager (like Context or Zustand).
-  const [transactions, setTransactions] = useState(allTransactions);
+  const paymentMethod = form.watch('paymentMethod');
+  const transactionType = form.watch('type');
 
   function onSubmit(data: TransactionFormValues) {
+    const finalAmount = data.type === 'income' ? data.amount : -data.amount;
+    const finalCategory = data.type === 'income' ? 'Renda' : data.category;
+
     const newTransaction: Transaction = {
       id: new Date().toISOString(),
       date: new Date().toLocaleDateString('pt-BR'),
       description: data.description,
-      amount: data.category === 'Renda' ? data.amount : -data.amount,
-      category: data.category,
-      type: data.category === 'Renda' ? 'income' : 'expense',
+      amount: finalAmount,
+      // @ts-ignore - We know this is valid
+      category: finalCategory,
+      type: data.type,
     };
-    // This is a temporary solution to demonstrate functionality.
-    // In a real app, this would update a global state or database.
-    console.log('New transaction added (locally):', newTransaction);
-    // You might want to pass this state down or lift it up to see updates on the transactions page.
+    
+    console.log('Nova transação adicionada (localmente):', newTransaction);
+    if(data.paymentMethod === 'card') {
+        console.log('Cartão de Crédito ID:', data.creditCardId);
+    }
+    
     form.reset();
     setIsDialogOpen(false);
   }
@@ -129,30 +156,62 @@ export function SidebarNav() {
               <DialogTrigger asChild>
                 <SidebarMenuButton
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  tooltip="Adicionar Despesa"
+                  tooltip="Adicionar Transação"
                 >
                   <PlusCircle />
-                  <span>Adicionar Despesa</span>
+                  <span>Adicionar Transação</span>
                 </SidebarMenuButton>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-lg">
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <DialogHeader>
                       <DialogTitle>Adicionar Nova Transação</DialogTitle>
                       <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    
+                    <div className="space-y-4">
+                       <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                          <FormItem className="space-y-3">
+                            <FormLabel>Tipo de Transação</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                              >
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <RadioGroupItem value="expense" id="expense" />
+                                  </FormControl>
+                                  <FormLabel htmlFor="expense" className="font-normal">Despesa</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <RadioGroupItem value="income" id="income" />
+                                  </FormControl>
+                                  <FormLabel htmlFor="income" className="font-normal">Receita</FormLabel>
+                                </FormItem>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={form.control}
                         name="description"
                         render={({ field }) => (
-                          <FormItem className="grid grid-cols-4 items-center gap-4">
-                            <FormLabel className="text-right">Descrição</FormLabel>
-                            <FormControl className="col-span-3">
-                              <Input placeholder="Ex: Café" {...field} />
+                          <FormItem>
+                            <FormLabel>Descrição</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: Café na padaria" {...field} />
                             </FormControl>
-                            <FormMessage className="col-span-4 text-right" />
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -160,39 +219,101 @@ export function SidebarNav() {
                         control={form.control}
                         name="amount"
                         render={({ field }) => (
-                          <FormItem className="grid grid-cols-4 items-center gap-4">
-                            <FormLabel className="text-right">Valor</FormLabel>
-                            <FormControl className="col-span-3">
-                              <Input type="number" placeholder="Ex: 5.50" {...field} />
+                          <FormItem>
+                            <FormLabel>Valor</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" placeholder="Ex: 5.50" {...field} />
                             </FormControl>
-                            <FormMessage className="col-span-4 text-right" />
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
+
+                      {transactionType === 'expense' && (
+                        <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Categoria</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Selecione uma categoria" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {transactionCategories.map((cat) => (
+                                    <SelectItem key={cat} value={cat}>
+                                        {cat}
+                                    </SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                      )}
+                      
                       <FormField
                         control={form.control}
-                        name="category"
+                        name="paymentMethod"
                         render={({ field }) => (
-                          <FormItem className="grid grid-cols-4 items-center gap-4">
-                            <FormLabel className="text-right">Categoria</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl className="col-span-3">
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione uma categoria" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {transactionCategories.map((cat) => (
-                                  <SelectItem key={cat} value={cat}>
-                                    {cat}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage className="col-span-4 text-right" />
+                          <FormItem className="space-y-3">
+                            <FormLabel>Forma de Pagamento</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                              >
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl><RadioGroupItem value="cash" id="cash" /></FormControl>
+                                  <FormLabel htmlFor="cash" className="font-normal">Dinheiro</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl><RadioGroupItem value="pix" id="pix" /></FormControl>
+                                  <FormLabel htmlFor="pix" className="font-normal">Pix</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl><RadioGroupItem value="card" id="card" /></FormControl>
+                                  <FormLabel htmlFor="card" className="font-normal">Cartão</FormLabel>
+                                </FormItem>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
+
+                      {paymentMethod === 'card' && (
+                        <FormField
+                          control={form.control}
+                          name="creditCardId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cartão de Crédito</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o cartão" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {creditCards.map((card) => (
+                                    <SelectItem key={card.id} value={card.id}>
+                                      {card.name} (final {card.last4})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
                     </div>
                     <DialogFooter>
                       <Button type="submit">Salvar Transação</Button>
