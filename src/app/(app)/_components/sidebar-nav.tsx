@@ -54,7 +54,7 @@ const navItems = [
   { href: '/transactions', label: 'Transações', icon: ArrowRightLeft },
   { href: '/budgeting', label: 'Consultor AI', icon: Sparkles, role: ['completo', 'admin'] },
   { href: '/profile', label: 'Perfil', icon: UserCircle },
-  { href: '/admin', label: 'Admin', icon: Shield, role: ['admin'] },
+  { href: '/admin/metrics', label: 'Admin', icon: Shield, role: ['admin'] },
 ];
 
 export function SidebarNav() {
@@ -96,6 +96,10 @@ export function SidebarNav() {
   const filteredNavItems = navItems.filter(item => {
     if (!item.role) return true; // Itens sem role são públicos
     if (!userProfile) return false; // Se não carregou o perfil, esconde itens com role
+    // O item do admin deve corresponder ao início do caminho
+    if (item.href.startsWith('/admin')) {
+      return pathname.startsWith('/admin') && item.role.includes(userProfile.role);
+    }
     return item.role.includes(userProfile.role);
   });
 
@@ -105,7 +109,7 @@ export function SidebarNav() {
         <SidebarMenu>
           {filteredNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+              <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={item.label}>
                 <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
