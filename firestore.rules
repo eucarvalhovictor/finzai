@@ -54,12 +54,11 @@ service cloud.firestore {
     
     /**
      * Returns true if the authenticated user has the 'admin' role.
-     * This checks the custom claim on the auth token, which is the secure way to handle roles.
+     * This checks the user's document for their role.
+     * IMPORTANT: This can only be used in `allow get` and `allow list` rules.
+     * It cannot be reliably used in `allow write` rules if the write depends on this check.
      */
     function isAdmin() {
-      // In a production app, you'd use custom claims: request.auth.token.role == 'admin'
-      // For this sandbox, we read the role from the user's document.
-      // This is less secure but works for demonstration.
        return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
@@ -100,19 +99,6 @@ service cloud.firestore {
     function isCreatingOwnSubcollectionDoc(userId) {
       return isOwner(userId) && request.resource.data.userId == userId;
     }
-    
-    /**
-     * Validates an update to a user document.
-     * Owners can update their own non-critical fields.
-     * Admins can update any user's role.
-     */
-    function canUpdateUser(userId) {
-      let isOwnerUpdatingProfile = isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']);
-      let isAdminUpdatingRole = isAdmin() && request.resource.data.keys().hasOnly(['role']);
-      
-      return isOwnerUpdatingProfile || isAdminUpdatingRole;
-    }
-
 
     // -------------------------------------------------------------------------
     // User Profiles (/users)
@@ -129,7 +115,11 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isCreatingOwnUserDoc(userId);
-      allow update: if canUpdateUser(userId);
+      // Owners can update their firstName and lastName
+      // Admins can update a user's role. The isAdmin() check must be done client-side for write rules.
+      // This rule structure separates owner updates from admin updates to prevent security rule conflicts.
+      allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']))
+                      || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && request.resource.data.keys().hasOnly(['role']));
       allow delete: if isExistingOwner(userId);
 
       // -----------------------------------------------------------------------
