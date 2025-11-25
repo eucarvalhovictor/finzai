@@ -11,9 +11,8 @@ export default function ProfilePage() {
         description="Gerencie suas informações pessoais e configurações de segurança."
       />
       
-      <div className="grid gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         <UserProfileForm />
-        <Separator />
         <ChangePasswordForm />
       </div>
     </div>

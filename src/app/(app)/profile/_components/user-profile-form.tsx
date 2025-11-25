@@ -17,7 +17,6 @@ import { useEffect } from 'react';
 const profileSchema = z.object({
   firstName: z.string().min(1, 'O nome é obrigatório.'),
   lastName: z.string().min(1, 'O sobrenome é obrigatório.'),
-  email: z.string().email('E-mail inválido.').optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -44,7 +43,6 @@ export function UserProfileForm() {
     defaultValues: {
       firstName: '',
       lastName: '',
-      email: '',
     },
   });
 
@@ -53,7 +51,6 @@ export function UserProfileForm() {
       form.reset({
         firstName: userProfile.firstName,
         lastName: userProfile.lastName,
-        email: userProfile.email,
       });
     }
   }, [userProfile, form]);
@@ -96,7 +93,6 @@ export function UserProfileForm() {
             <CardContent className="space-y-4">
                 <div className="space-y-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-10 w-full" /></div>
                 <div className="space-y-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-10 w-full" /></div>
-                <div className="space-y-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-10 w-full" /></div>
             </CardContent>
             <CardFooter>
                  <Skeleton className="h-10 w-24" />
@@ -109,7 +105,7 @@ export function UserProfileForm() {
     <Card>
       <CardHeader>
         <CardTitle>Informações Pessoais</CardTitle>
-        <CardDescription>Atualize seu nome, sobrenome e e-mail.</CardDescription>
+        <CardDescription>Atualize seu nome e sobrenome.</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -142,19 +138,13 @@ export function UserProfileForm() {
                 )}
                 />
             </div>
-             <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                        <Input disabled {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+             <FormItem>
+                <FormLabel>E-mail</FormLabel>
+                <FormControl>
+                    <Input disabled value={user?.email || ''} />
+                </FormControl>
+                <FormMessage />
+             </FormItem>
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={form.formState.isSubmitting}>
