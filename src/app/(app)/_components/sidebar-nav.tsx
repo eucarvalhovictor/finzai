@@ -47,7 +47,7 @@ const navItems = [
   { href: '/credit-cards', label: 'Cartões de Crédito', icon: CreditCard },
   { href: '/investments', label: 'Investimentos', icon: TrendingUp },
   { href: '/transactions', label: 'Transações', icon: ArrowRightLeft },
-  { href: '/budgeting', label: 'Orçamento IA', icon: Sparkles },
+  { href: '/budgeting', label: 'Consultor AI', icon: Sparkles },
 ];
 
 export function SidebarNav() {

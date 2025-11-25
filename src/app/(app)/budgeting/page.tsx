@@ -1,14 +1,14 @@
 import { PageHeader } from '@/components/page-header';
-import { BudgetForm } from './_components/budget-form';
+import { AIConsultant } from './_components/ai-consultant';
 
 export default function BudgetingPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Orçamento com IA"
-        description="Receba sugestões inteligentes para otimizar seus gastos e alcançar seus objetivos."
+        title="Consultor Financeiro AI"
+        description="Receba uma análise detalhada e dicas assertivas para seu perfil financeiro."
       />
-      <BudgetForm />
+      <AIConsultant />
     </div>
   );
 }

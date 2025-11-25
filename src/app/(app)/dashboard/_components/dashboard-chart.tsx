@@ -19,7 +19,7 @@ const chartConfig = {
   },
   expenses: {
     label: "Despesas",
-    color: "hsl(var(--accent))",
+    color: "hsl(var(--destructive))",
   },
 }
 
@@ -90,5 +90,3 @@ export function DashboardChart({ transactions, isLoading }: DashboardChartProps)
         </ChartContainer>
     )
 }
-
-    
