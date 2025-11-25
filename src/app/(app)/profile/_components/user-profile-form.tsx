@@ -81,23 +81,24 @@ export function UserProfileForm() {
     if (!user || !userDocRef) return;
 
     try {
+      // Data to be saved in Firestore. This can include the long data URI.
       const updatedData: Partial<UserProfile> = {
         firstName: data.firstName,
         lastName: data.lastName,
         photoURL: data.photoURL,
       };
 
-      // Update Firestore document
+      // Update Firestore document with all data.
       updateDocumentNonBlocking(userDocRef, updatedData);
       
-      // Update Firebase Auth profile
+      // Update Firebase Auth profile, but ONLY with data that fits.
+      // Do NOT send the photoURL here to avoid the "too long" error.
       if (auth.currentUser) {
         await updateProfile(auth.currentUser, {
           displayName: `${data.firstName} ${data.lastName || ''}`.trim(),
-          photoURL: data.photoURL,
+          // photoURL is intentionally omitted here.
         });
       }
-
 
       toast({
         title: 'Perfil Atualizado',
