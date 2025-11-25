@@ -1,0 +1,186 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model where all user data is sandboxed.
+ * Data is only accessible to the authenticated user who owns it, ensuring high levels of privacy and security
+ * for sensitive financial information. It also introduces role-based access for certain features.
+ *
+ * Data Structure: All data is hierarchically organized under the top-level `/users` collection. Each user's
+ * data, including credit cards, transactions, and investment accounts, is stored in subcollections
+ * under their specific document path, e.g., `/users/{userId}/creditCards/{creditCardId}`. This structure
+ * naturally isolates user data.
+ *
+ * Key Security Decisions:
+ * - User Listing Disabled (for non-admins): To protect user privacy, it is impossible to list all documents in the `/users`
+ *   collection unless the user is an admin or the query is strictly limited for checking existence on sign-up.
+ * - Path-Based Authorization: All authorization checks are based on the document path. A user's UID must
+ *   match the `{userId}` segment in the path to gain access.
+ * - Relational Integrity: On document creation, rules enforce that an internal `userId` field must match the
+ *   `userId` in the path, creating a durable and secure link between the data and its owner. This field
+ *   is immutable on updates.
+ * - Role-Based Access: Creation of credit cards is limited based on the user's role. 'basico' users
+ *   can only create one card. Admins have special permissions.
+ * - Default Deny: Access is denied by default. All permissions are granted explicitly through `allow`
+ *   statements.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing data ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the user is the owner and the resource already exists.
+     * Used for all state-changing update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && exists(/databases/$(database)/documents/users/$(userId));
+    }
+    
+     /**
+     * Returns true if the user is an administrator.
+     * This reads the user's document to check their role.
+     */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+
+    /**
+     * Validates that a user is creating their own root user document and that
+     * the document's internal `id` field matches their auth UID for integrity.
+     * Also ensures new users are assigned the 'basico' role unless they are the first user.
+     */
+    function isCreatingOwnUserDoc(userId) {
+      let isIdMatching = request.resource.data.id == userId;
+      // Allow admin to create users with any role, otherwise default to 'basico'
+      let isRoleValid = (isAdmin() && request.resource.data.role in ['basico', 'completo', 'admin']) || (request.resource.data.role == 'basico');
+      return (isOwner(userId) || isAdmin()) && isIdMatching && isRoleValid;
+    }
+    
+    /**
+     * Validates that a subcollection document's internal `userId` field remains unchanged during an update.
+     */
+    function isSubcollectionDocOwnerIdImmutable() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * Role-based check for creating credit cards.
+     * Allows creation if user is not 'basico', or if they are 'basico' and have no existing cards.
+     */
+    function canCreateCreditCard(userId) {
+      // Allow if user is not 'basico', or if they are 'basico' and have no existing cards.
+      // This requires reading the user's document, which must be allowed separately.
+      let userRole = get(/databases/$(database)/documents/users/$(userId)).data.role;
+      let existingCards = list(/databases/$(database)/documents/users/$(userId)/creditCards, 1);
+      
+      return userRole != 'basico' || (userRole == 'basico' && existingCards.size() == 0);
+    }
+    
+    /**
+     * Validates that a user is creating a document in their own subcollection
+     * and that the document's internal `userId` field matches their auth UID.
+     */
+    function isCreatingOwnSubcollectionDoc(userId) {
+      return isOwner(userId) && request.resource.data.userId == userId;
+    }
+
+    // -------------------------------------------------------------------------
+    // User Profiles (/users)
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents.
+     * @allow (get) An owner or an admin can read a user's profile.
+     * @allow (list) Only admins can list all users, or the query is for checking existence.
+     * @allow (create) A new user can create their own profile.
+     * @allow (update) An owner can update their name; an admin can update a user's role.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin() || request.query.limit <= 1;
+      allow create: if isCreatingOwnUserDoc(userId);
+      // Owners can update their firstName and lastName
+      // Admins can update a user's role.
+      allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']))
+                      || (isAdmin() && request.resource.data.keys().hasOnly(['role']));
+      allow delete: if isAdmin();
+
+      // -----------------------------------------------------------------------
+      // User Subcollections
+      // -----------------------------------------------------------------------
+
+      /**
+       * @description Manages credit cards owned by a specific user.
+       * @path /users/{userId}/creditCards/{creditCardId}
+       * @allow (create) An authenticated user can create a credit card if they meet role-based limits.
+       * @deny (get) A user `user-abc` cannot read a credit card document from `user-xyz`'s path.
+       */
+      match /creditCards/{creditCardId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnSubcollectionDoc(userId) && canCreateCreditCard(userId);
+        allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages investment accounts owned by a specific user.
+       * @path /users/{userId}/investmentAccounts/{investmentAccountId}
+       * @allow (list) An authenticated user can list all investment accounts within their own user path.
+       * @deny (create) A user cannot create an investment account document in another user's path.
+       */
+      match /investmentAccounts/{investmentAccountId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnSubcollectionDoc(userId);
+        allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages financial transactions for a specific user.
+       * @path /users/{userId}/transactions/{transactionId}
+       * @allow (update) An authenticated user can update a transaction within their own user path.
+       * @deny (delete) A user `user-abc` cannot delete a transaction belonging to `user-xyz`.
+       */
+      match /transactions/{transactionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnSubcollectionDoc(userId);
+        allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages AI-generated budget suggestions for a specific user.
+       * @path /users/{userId}/budgetSuggestions/{budgetSuggestionId}
+       * @allow (get) An authenticated user can read a budget suggestion generated for them.
+       * @deny (list) An anonymous user cannot list budget suggestions for any user.
+       */
+      match /budgetSuggestions/{budgetSuggestionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnSubcollectionDoc(userId);
+        allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}

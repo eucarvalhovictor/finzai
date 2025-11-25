@@ -5,12 +5,16 @@ import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
-import { Lock } from 'lucide-react';
+import { Lock, PlusCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserManagementTable } from './_components/user-management-table';
+import { AddUserDialog } from './_components/add-user-dialog';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function AdminPage() {
   const { user, firestore } = useFirebase();
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -51,12 +55,20 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="grid gap-6">
-      <PageHeader
-        title="Painel Administrativo"
-        description="Gerencie os cargos e permissões dos usuários do sistema."
-      />
-      <UserManagementTable />
-    </div>
+    <>
+      <div className="grid gap-6">
+        <PageHeader
+          title="Painel Administrativo"
+          description="Gerencie os cargos e permissões dos usuários do sistema."
+        >
+            <Button onClick={() => setIsAddUserOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Adicionar Usuário
+            </Button>
+        </PageHeader>
+        <UserManagementTable />
+      </div>
+      <AddUserDialog isOpen={isAddUserOpen} onOpenChange={setIsAddUserOpen} />
+    </>
   );
 }
