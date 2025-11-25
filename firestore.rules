@@ -67,22 +67,19 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that the user document's internal `id` field remains unchanged during an update.
-     */
-    function isUserDocIdImmutable() {
-      return request.resource.data.id == resource.data.id;
-    }
-    
-    /**
-     * Validates that the user document's internal 'id' and 'email' fields remain unchanged during an update.
-     * This is more secure for user profile updates.
+     * Validates that the user document's internal 'id', 'email', and 'registrationDate' fields remain unchanged during an update.
+     * This is a critical security measure for user profile updates.
      */
     function areUserCoreFieldsImmutable() {
-      let isIdImmutable = !('id' in request.resource.data) || request.resource.data.id == resource.data.id;
-      let isEmailImmutable = !('email' in request.resource.data) || request.resource.data.email == resource.data.email;
-      let isRegistrationDateImmutable = !('registrationDate' in request.resource.data) || request.resource.data.registrationDate == resource.data.registrationDate;
-      return isIdImmutable && isEmailImmutable && isRegistrationDateImmutable;
+      // Check if the incoming request data attempts to change any of the core immutable fields.
+      // If a field exists in the request, it MUST match the existing value in the database.
+      let idIsUnchanged = !('id' in request.resource.data) || request.resource.data.id == resource.data.id;
+      let emailIsUnchanged = !('email' in request.resource.data) || request.resource.data.email == resource.data.email;
+      let registrationDateIsUnchanged = !('registrationDate' in request.resource.data) || request.resource.data.registrationDate == resource.data.registrationDate;
+
+      return idIsUnchanged && emailIsUnchanged && registrationDateIsUnchanged;
     }
+
 
     /**
      * Validates that a user is creating a document in their own subcollection
@@ -183,5 +180,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
