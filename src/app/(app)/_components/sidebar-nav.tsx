@@ -39,6 +39,9 @@ import { useState } from 'react';
 import type { CreditCard as CreditCardType } from '@/lib/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -52,6 +55,8 @@ export function SidebarNav() {
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const auth = useAuth();
+  const router = useRouter();
   
   // Fake credit card data. In a real app, this would come from a global state or API.
   const [creditCards, setCreditCards] = useState<CreditCardType[]>([
@@ -63,6 +68,11 @@ export function SidebarNav() {
     setIsDialogOpen(false);
   };
   
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
   const AddTransactionButton = (
     <SidebarMenuButton
       className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -124,11 +134,9 @@ export function SidebarNav() {
             )}
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Sair">
-              <Link href="/login">
+            <SidebarMenuButton onClick={handleLogout} tooltip="Sair">
                 <LogOut className="text-destructive" />
                 <span className="text-destructive">Sair</span>
-              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

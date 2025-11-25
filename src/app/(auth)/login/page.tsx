@@ -13,15 +13,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const { register, handleSubmit } = useForm();
   const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
 
-  const onSubmit = () => {
-    // Em uma aplicação real, aqui você validaria o usuário
-    // Por enquanto, vamos apenas redirecionar para o dashboard
-    router.push('/dashboard');
+  const onSubmit = async (data: any) => {
+    try {
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Login',
+        description: error.message || 'Ocorreu um erro ao tentar fazer login.',
+      });
+    }
   };
 
   return (

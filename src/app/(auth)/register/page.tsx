@@ -13,15 +13,36 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function RegisterPage() {
   const { register, handleSubmit } = useForm();
   const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
 
-  const onSubmit = () => {
-    // Em uma aplicação real, aqui você criaria o usuário
-    // Por enquanto, vamos apenas redirecionar para o dashboard
-    router.push('/dashboard');
+  const onSubmit = async (data: any) => {
+    if (data.password !== data.confirmPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Registro',
+        description: 'As senhas não coincidem.',
+      });
+      return;
+    }
+    try {
+      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      router.push('/dashboard');
+    } catch (error: any) {
+       toast({
+        variant: 'destructive',
+        title: 'Erro de Registro',
+        description: error.message || 'Ocorreu um erro ao criar a conta.',
+      });
+    }
   };
 
   return (
@@ -51,6 +72,10 @@ export default function RegisterPage() {
           <div className="grid gap-2">
             <Label htmlFor="password">Senha</Label>
             <Input id="password" type="password" required {...register('password')} />
+          </div>
+           <div className="grid gap-2">
+            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+            <Input id="confirmPassword" type="password" required {...register('confirmPassword')} />
           </div>
           <Button type="submit" className="w-full">
             Criar conta
