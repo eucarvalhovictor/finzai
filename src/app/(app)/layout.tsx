@@ -17,7 +17,7 @@ export default function AppLayout({
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader className="justify-center">
+        <SidebarHeader className="p-2">
           <SidebarTrigger />
         </SidebarHeader>
         <SidebarNav />
@@ -36,3 +36,5 @@ export default function AppLayout({
     </SidebarProvider>
   );
 }
+
+    
