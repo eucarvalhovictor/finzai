@@ -1,7 +1,7 @@
 'use client';
 
-import { useFirebase, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { UserProfile, UserRole } from '@/lib/types';
 import {
   Table,
@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 const roles: UserRole[] = ['basico', 'completo', 'admin'];
 
 export function UserManagementTable() {
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase(); // Adicionado 'user' para verificar se o admin está logado
   const { toast } = useToast();
 
   const usersQuery = useMemoFirebase(() => {
@@ -34,17 +34,35 @@ export function UserManagementTable() {
 
   const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    if (!firestore) return;
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    if (!firestore || !user) {
+        toast({
+            variant: "destructive",
+            title: "Erro de Autenticação",
+            description: "Você precisa estar logado como administrador para realizar esta ação.",
+        });
+        return;
+    }
 
     const userDocRef = doc(firestore, 'users', userId);
-    
-    updateDocumentNonBlocking(userDocRef, { role: newRole });
-    
-    toast({
-      title: "Cargo Atualizado",
-      description: `O cargo do usuário foi alterado para ${newRole}.`,
-    });
+
+    try {
+        await updateDoc(userDocRef, {
+            role: newRole,
+        });
+
+        toast({
+            title: "Cargo Atualizado",
+            description: `O cargo do usuário foi alterado para ${newRole}.`,
+        });
+    } catch (error: any) {
+        console.error(`❌ Erro ao atualizar o cargo do usuário ${userId}:`, error);
+        toast({
+            variant: "destructive",
+            title: "Erro de Permissão",
+            description: "Ocorreu um erro ao atualizar o cargo. Verifique suas permissões de administrador.",
+        });
+    }
   };
 
   return (
