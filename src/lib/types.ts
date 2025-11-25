@@ -42,4 +42,13 @@ export type AssetAllocation = {
   value: number;
 };
 
-    
+export type UserRole = 'basico' | 'completo' | 'admin';
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  registrationDate: Timestamp;
+  role: UserRole;
+};

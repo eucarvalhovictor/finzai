@@ -39,16 +39,19 @@ import {
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
-import { useAuth } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import type { UserProfile } from '@/lib/types';
+import { doc } from 'firebase/firestore';
+
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/credit-cards', label: 'Cartões de Crédito', icon: CreditCard },
   { href: '/investments', label: 'Investimentos', icon: TrendingUp },
   { href: '/transactions', label: 'Transações', icon: ArrowRightLeft },
-  { href: '/budgeting', label: 'Consultor AI', icon: Sparkles },
+  { href: '/budgeting', label: 'Consultor AI', icon: Sparkles, role: ['completo', 'admin'] },
   { href: '/profile', label: 'Perfil', icon: UserCircle },
 ];
 
@@ -56,8 +59,14 @@ export function SidebarNav() {
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
-  const auth = useAuth();
+  const { auth, user, firestore } = useFirebase();
   const router = useRouter();
+  
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [user, firestore]);
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const handleTransactionSaved = () => {
     setIsDialogOpen(false);
@@ -81,12 +90,18 @@ export function SidebarNav() {
       <span>Adicionar Transação</span>
     </SidebarMenuButton>
   );
+  
+  const filteredNavItems = navItems.filter(item => {
+    if (!item.role) return true; // Itens sem role são públicos
+    if (!userProfile) return false; // Se não carregou o perfil, esconde itens com role
+    return item.role.includes(userProfile.role);
+  });
 
   return (
     <>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
+          {filteredNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
                 <Link href={item.href}>

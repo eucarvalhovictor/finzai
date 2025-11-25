@@ -1,7 +1,7 @@
 /**
  * Core Philosophy: This ruleset enforces a strict user-ownership model where all user data is sandboxed.
  * Data is only accessible to the authenticated user who owns it, ensuring high levels of privacy and security
- * for sensitive financial information.
+ * for sensitive financial information. It also introduces role-based access for certain features.
  *
  * Data Structure: All data is hierarchically organized under the top-level `/users` collection. Each user's
  * data, including credit cards, transactions, and investment accounts, is stored in subcollections
@@ -16,16 +16,10 @@
  * - Relational Integrity: On document creation, rules enforce that an internal `userId` field must match the
  *   `userId` in the path, creating a durable and secure link between the data and its owner. This field
  *   is immutable on updates.
+ * - Role-Based Access: Creation of credit cards is limited based on the user's role. 'basico' users
+ *   can only create one card.
  * - Default Deny: Access is denied by default. All permissions are granted explicitly through specific `allow`
  *   statements.
- *
- * Denormalization for Authorization: The entire security model is built on structural denormalization. By nesting
- * all user-specific data under a `/users/{userId}` path, authorization becomes simple and performant. There is
- * no need for costly `get()` calls to other documents to verify ownership, as ownership is determined by the path itself.
- *
- * Structural Segregation: This ruleset perfectly exemplifies structural segregation. All user data is inherently private
- * and contained within user-specific subcollections. There are no mixed-privacy collections, which simplifies list
- * operations and enhances security.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -55,28 +49,30 @@ service cloud.firestore {
      * Used for all state-changing update and delete operations.
      */
     function isExistingOwner(userId) {
-      return isOwner(userId) && exists(/databases/$(database)/documents/$(request.path.split('/')[1])/$(userId));
+      return isOwner(userId) && exists(/databases/$(database)/documents/users/$(userId));
     }
 
     /**
      * Validates that a user is creating their own root user document and that
      * the document's internal `id` field matches their auth UID for integrity.
+     * Also ensures new users are assigned the 'basico' role.
      */
     function isCreatingOwnUserDoc(userId) {
-      return isOwner(userId) && request.resource.data.id == userId;
+      let isIdMatching = request.resource.data.id == userId;
+      let isDefaultRole = request.resource.data.role == 'basico';
+      return isOwner(userId) && isIdMatching && isDefaultRole;
     }
 
     /**
-     * Validates that the only fields being updated in a user document are `firstName` and `lastName`.
-     * This prevents users from modifying critical, immutable properties of their profile.
+     * Validates that core, immutable user fields are not being changed during an update.
      */
-    function canUpdateUserProfile() {
-      let incomingKeys = request.resource.data.keys();
-      let allowedKeys = ['firstName', 'lastName'];
-      return incomingKeys.hasAll(allowedKeys) && incomingKeys.size() == allowedKeys.size();
+    function areUserCoreFieldsImmutable() {
+      // Deny update if request tries to change id, email, or registrationDate
+      return !('id' in request.resource.data)
+          && !('email' in request.resource.data)
+          && !('registrationDate' in request.resource.data);
     }
-
-
+    
     /**
      * Validates that a user is creating a document in their own subcollection
      * and that the document's internal `userId` field matches their auth UID.
@@ -92,6 +88,18 @@ service cloud.firestore {
       return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
     }
 
+    /**
+     * Role-based check for creating credit cards.
+     * Allows creation if user is not 'basico', or if they are 'basico' and have no existing cards.
+     */
+    function canCreateCreditCard(userId) {
+      let userRole = get(/databases/$(database)/documents/users/$(userId)).data.role;
+      let existingCards = list(/databases/$(database)/documents/users/$(userId)/creditCards, 1);
+      
+      return userRole != 'basico' || (userRole == 'basico' && existingCards.size() == 0);
+    }
+
+
     // -------------------------------------------------------------------------
     // User Profiles (/users)
     // -------------------------------------------------------------------------
@@ -100,14 +108,14 @@ service cloud.firestore {
      * @description Manages user profile documents.
      * @path /users/{userId}
      * @allow (create) A new user can create their own profile document if their UID matches the document ID.
+     * @allow (update) An owner can update their profile, but cannot change immutable fields.
      * @deny (list) An attacker cannot list all documents in the `/users` collection to harvest user IDs.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isCreatingOwnUserDoc(userId);
-      allow update: if isExistingOwner(userId) && canUpdateUserProfile();
+      allow update: if isExistingOwner(userId) && areUserCoreFieldsImmutable();
       allow delete: if isExistingOwner(userId);
 
       // -----------------------------------------------------------------------
@@ -117,14 +125,13 @@ service cloud.firestore {
       /**
        * @description Manages credit cards owned by a specific user.
        * @path /users/{userId}/creditCards/{creditCardId}
-       * @allow (create) An authenticated user can create a credit card document within their own user path.
+       * @allow (create) An authenticated user can create a credit card if they meet role-based limits.
        * @deny (get) A user `user-abc` cannot read a credit card document from `user-xyz`'s path.
-       * @principle Enforces strict data ownership for all CRUD and list operations within a user's private subcollections.
        */
       match /creditCards/{creditCardId} {
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
-        allow create: if isCreatingOwnSubcollectionDoc(userId);
+        allow create: if isCreatingOwnSubcollectionDoc(userId) && canCreateCreditCard(userId);
         allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
         allow delete: if isExistingOwner(userId);
       }
@@ -134,7 +141,6 @@ service cloud.firestore {
        * @path /users/{userId}/investmentAccounts/{investmentAccountId}
        * @allow (list) An authenticated user can list all investment accounts within their own user path.
        * @deny (create) A user cannot create an investment account document in another user's path.
-       * @principle Enforces strict data ownership for all CRUD and list operations within a user's private subcollections.
        */
       match /investmentAccounts/{investmentAccountId} {
         allow get: if isOwner(userId);
@@ -149,7 +155,6 @@ service cloud.firestore {
        * @path /users/{userId}/transactions/{transactionId}
        * @allow (update) An authenticated user can update a transaction within their own user path.
        * @deny (delete) A user `user-abc` cannot delete a transaction belonging to `user-xyz`.
-       * @principle Enforces strict data ownership for all CRUD and list operations within a user's private subcollections.
        */
       match /transactions/{transactionId} {
         allow get: if isOwner(userId);
@@ -164,7 +169,6 @@ service cloud.firestore {
        * @path /users/{userId}/budgetSuggestions/{budgetSuggestionId}
        * @allow (get) An authenticated user can read a budget suggestion generated for them.
        * @deny (list) An anonymous user cannot list budget suggestions for any user.
-       * @principle Enforces strict data ownership for all CRUD and list operations within a user's private subcollections.
        */
       match /budgetSuggestions/{budgetSuggestionId} {
         allow get: if isOwner(userId);

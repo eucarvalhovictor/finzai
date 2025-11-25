@@ -36,42 +36,69 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import type { CreditCard } from '@/lib/types';
+import type { CreditCard, UserProfile, Transaction } from '@/lib/types';
+import { useFirebase, useCollection, useDoc, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const cardSchema = z.object({
-  name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-  last4: z.string().length(4, 'Deve conter os 4 últimos dígitos.'),
-  limit: z.coerce.number().positive('O limite deve ser um número positivo.'),
-  dueDate: z.string().min(1, 'A data de vencimento é obrigatória.'),
+  cardHolderName: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres.'),
+  cardNumber: z.string().length(4, 'Deve conter os 4 últimos dígitos.'),
+  creditLimit: z.coerce.number().positive('O limite deve ser um número positivo.'),
+  expiryDate: z.string().min(1, 'A data de vencimento é obrigatória.'),
 });
 
 type CardFormValues = z.infer<typeof cardSchema>;
 
 export default function CreditCardsPage() {
-  const [cards, setCards] = useState<CreditCard[]>([]);
+  const { user, firestore } = useFirebase();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [user, firestore]);
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
+
+  const cardsRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `users/${user.uid}/creditCards`);
+  }, [user, firestore]);
+  const { data: cards, isLoading: isLoadingCards } = useCollection<CreditCard>(cardsRef);
+  
+  const transactionsRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `users/${user.uid}/transactions`);
+  }, [user, firestore]);
+  const { data: transactions, isLoading: isLoadingTransactions } = useCollection<Transaction>(transactionsRef);
 
   const form = useForm<CardFormValues>({
     resolver: zodResolver(cardSchema),
     defaultValues: {
-      name: '',
-      last4: '',
-      limit: 0,
-      dueDate: '',
+      cardHolderName: '',
+      cardNumber: '',
+      creditLimit: 0,
+      expiryDate: '',
     },
   });
 
   function onSubmit(data: CardFormValues) {
-    const newCard: CreditCard = {
-      id: new Date().toISOString(),
-      balance: 0,
-      transactions: [],
+    if (!user || !cardsRef) return;
+
+    const newCardData = {
+      userId: user.uid,
+      balance: 0, // Saldo inicial
       ...data,
     };
-    setCards(prev => [...prev, newCard]);
+    addDocumentNonBlocking(cardsRef, newCardData);
     form.reset();
     setIsDialogOpen(false);
   }
+
+  const userIsBasic = userProfile?.role === 'basico';
+  const hasReachedCardLimit = userIsBasic && cards && cards.length >= 1;
+
+  const isLoading = isLoadingCards || isLoadingProfile || isLoadingTransactions;
 
   return (
     <div className="grid gap-6">
@@ -81,7 +108,7 @@ export default function CreditCardsPage() {
       >
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={hasReachedCardLimit || isLoading}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Cartão
             </Button>
@@ -98,7 +125,7 @@ export default function CreditCardsPage() {
                 <div className="grid gap-4 py-4">
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="cardHolderName"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
                         <FormLabel className="text-right">Nome</FormLabel>
@@ -111,7 +138,7 @@ export default function CreditCardsPage() {
                   />
                   <FormField
                     control={form.control}
-                    name="last4"
+                    name="cardNumber"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
                         <FormLabel className="text-right">Últimos 4 dígitos</FormLabel>
@@ -124,7 +151,7 @@ export default function CreditCardsPage() {
                   />
                    <FormField
                     control={form.control}
-                    name="limit"
+                    name="creditLimit"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
                         <FormLabel className="text-right">Limite</FormLabel>
@@ -137,7 +164,7 @@ export default function CreditCardsPage() {
                   />
                    <FormField
                     control={form.control}
-                    name="dueDate"
+                    name="expiryDate"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
                         <FormLabel className="text-right">Vencimento</FormLabel>
@@ -157,35 +184,44 @@ export default function CreditCardsPage() {
           </DialogContent>
         </Dialog>
       </PageHeader>
+        {hasReachedCardLimit && (
+            <p className="text-sm text-center text-muted-foreground -mt-4">
+                Seu plano Básico permite cadastrar apenas 1 cartão.
+            </p>
+        )}
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        {cards.length > 0 ? cards.map((card) => {
-          const usagePercentage = card.limit > 0 ? (card.balance / card.limit) * 100 : 0;
+        {isLoading ? (
+            Array.from({length: 2}).map((_, i) => <Skeleton key={i} className="h-64 w-full" />)
+        ) : cards && cards.length > 0 ? cards.map((card) => {
+          const cardTransactions = transactions?.filter(t => t.creditCardId === card.id) || [];
+          const cardBalance = cardTransactions.reduce((acc, t) => acc + t.amount, 0);
+          const usagePercentage = card.creditLimit > 0 ? (Math.abs(cardBalance) / card.creditLimit) * 100 : 0;
           return (
             <Card key={card.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{card.name}</CardTitle>
+                  <CardTitle>{card.cardHolderName}</CardTitle>
                   <span className="text-sm font-mono text-muted-foreground">
-                    **** {card.last4}
+                    **** {card.cardNumber}
                   </span>
                 </div>
                 <CardDescription>
-                  Vencimento em {card.dueDate}
+                  Vencimento em {card.expiryDate}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold">
-                    {formatCurrency(card.balance)}
+                    {formatCurrency(cardBalance)}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    / {formatCurrency(card.limit)}
+                    / {formatCurrency(card.creditLimit)}
                   </span>
                 </div>
                 <Progress value={usagePercentage} aria-label={`${usagePercentage.toFixed(0)}% usado`} />
                 <div>
                   <h3 className="mb-2 text-sm font-medium">Transações Recentes</h3>
-                   {card.transactions.length > 0 ? (
+                   {cardTransactions.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -194,11 +230,10 @@ export default function CreditCardsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {card.transactions.slice(0, 3).map((tx) => (
+                        {cardTransactions.slice(0, 3).map((tx) => (
                           <TableRow key={tx.id}>
                             <TableCell>
                               <div className="font-medium">{tx.description}</div>
-                              <div className="text-xs text-muted-foreground">{tx.date}</div>
                             </TableCell>
                             <TableCell className="text-right font-medium">
                               {formatCurrency(tx.amount)}

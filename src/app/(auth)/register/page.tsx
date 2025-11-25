@@ -51,6 +51,7 @@ export default function RegisterPage() {
         firstName: data.firstName,
         lastName: data.lastName,
         registrationDate: serverTimestamp(),
+        role: 'basico', // Define o cargo padrão como 'basico'
       }, { merge: false });
 
       router.push('/dashboard');
