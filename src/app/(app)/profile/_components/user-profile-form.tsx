@@ -66,9 +66,12 @@ export function UserProfileForm() {
       });
       
       // Update Firebase Auth profile
-      await updateProfile(user, {
-        displayName: `${data.firstName} ${data.lastName}`
-      });
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: `${data.firstName} ${data.lastName}`
+        });
+      }
+
 
       toast({
         title: 'Perfil Atualizado',
@@ -143,7 +146,6 @@ export function UserProfileForm() {
                 <FormControl>
                     <Input disabled value={user?.email || ''} />
                 </FormControl>
-                <FormMessage />
              </FormItem>
           </CardContent>
           <CardFooter>
@@ -156,3 +158,5 @@ export function UserProfileForm() {
     </Card>
   );
 }
+
+    

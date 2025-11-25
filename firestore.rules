@@ -55,7 +55,7 @@ service cloud.firestore {
      * Used for all state-changing update and delete operations.
      */
     function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+      return isOwner(userId) && exists(/databases/$(database)/documents/$(request.path.split('/')[1])/$(userId));
     }
 
     /**
@@ -72,6 +72,17 @@ service cloud.firestore {
     function isUserDocIdImmutable() {
       return request.resource.data.id == resource.data.id;
     }
+    
+    /**
+     * Validates that the user document's internal 'id' and 'email' fields remain unchanged during an update.
+     * This is more secure for user profile updates.
+     */
+    function areUserCoreFieldsImmutable() {
+      let isIdImmutable = !('id' in request.resource.data) || request.resource.data.id == resource.data.id;
+      let isEmailImmutable = !('email' in request.resource.data) || request.resource.data.email == resource.data.email;
+      let isRegistrationDateImmutable = !('registrationDate' in request.resource.data) || request.resource.data.registrationDate == resource.data.registrationDate;
+      return isIdImmutable && isEmailImmutable && isRegistrationDateImmutable;
+    }
 
     /**
      * Validates that a user is creating a document in their own subcollection
@@ -85,7 +96,7 @@ service cloud.firestore {
      * Validates that a subcollection document's internal `userId` field remains unchanged during an update.
      */
     function isSubcollectionDocOwnerIdImmutable() {
-      return request.resource.data.userId == resource.data.userId;
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
     }
 
     // -------------------------------------------------------------------------
@@ -103,7 +114,7 @@ service cloud.firestore {
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isCreatingOwnUserDoc(userId);
-      allow update: if isExistingOwner(userId) && isUserDocIdImmutable();
+      allow update: if isExistingOwner(userId) && areUserCoreFieldsImmutable();
       allow delete: if isExistingOwner(userId);
 
       // -----------------------------------------------------------------------
@@ -172,3 +183,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
