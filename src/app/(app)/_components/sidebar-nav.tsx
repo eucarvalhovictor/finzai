@@ -124,9 +124,11 @@ export function SidebarNav() {
             )}
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Sair">
-              <LogOut className="text-destructive" />
-              <span className="text-destructive">Sair</span>
+            <SidebarMenuButton asChild tooltip="Sair">
+              <Link href="/login">
+                <LogOut className="text-destructive" />
+                <span className="text-destructive">Sair</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
