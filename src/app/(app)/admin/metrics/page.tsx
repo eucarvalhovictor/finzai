@@ -8,11 +8,11 @@ import { DollarSign, Users, ShoppingCart } from 'lucide-react';
 
 export default function AdminMetricsPage() {
 
-    // Dados mockados
+    // Dados iniciais
     const metrics = {
-        totalRevenue: 12540.50,
-        newUsers: 89,
-        subscriptions: 230,
+        totalRevenue: 0,
+        newUsers: 0,
+        subscriptions: 0,
     }
 
   return (
@@ -32,7 +32,7 @@ export default function AdminMetricsPage() {
                   {formatCurrency(metrics.totalRevenue)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  +20.1% em relação ao mês passado
+                  Nenhuma receita registrada ainda.
                 </p>
               </CardContent>
             </Card>
@@ -46,7 +46,7 @@ export default function AdminMetricsPage() {
                   +{metrics.subscriptions}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  +12.2% em relação ao mês passado
+                  Nenhuma inscrição registrada.
                 </p>
               </CardContent>
             </Card>
@@ -60,7 +60,7 @@ export default function AdminMetricsPage() {
                   +{metrics.newUsers}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  +35.9% em relação ao mês passado
+                  Nenhum usuário novo registrado.
                 </p>
               </CardContent>
             </Card>
