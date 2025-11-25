@@ -57,7 +57,7 @@ export default function AppLayout({
           </div>
           <div className="flex-1" />
         </header>
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 animate-fade-in">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
