@@ -1,4 +1,3 @@
-// src/ai/flows/ai-powered-budget-suggestions.ts
 'use server';
 /**
  * @fileOverview AI-powered budget suggestion flow.
@@ -17,22 +16,22 @@ import {z} from 'genkit';
 
 // Define the input schema
 const AIPoweredBudgetSuggestionsInputSchema = z.object({
-  income: z.number().describe('Monthly income.'),
+  income: z.number().describe('Renda mensal.'),
   expenses: z.array(
     z.object({
-      category: z.string().describe('Expense category (e.g., Housing, Food, Transportation).'),
-      amount: z.number().describe('Amount spent in the category.'),
+      category: z.string().describe('Categoria da despesa (ex: Moradia, Alimentação, Transporte).'),
+      amount: z.number().describe('Valor gasto na categoria.'),
     })
-  ).describe('List of monthly expenses with categories and amounts.'),
-  financialGoals: z.string().describe('User provided financial goals (e.g., save for a down payment, pay off debt).'),
-  historicalTransactions: z.string().optional().describe('Optional: User historical transactions, which would influence the suggestions.')
+  ).describe('Lista de despesas mensais com categorias e valores.'),
+  financialGoals: z.string().describe('Metas financeiras do usuário (ex: economizar para a entrada de uma casa, pagar dívidas).'),
+  historicalTransactions: z.string().optional().describe('Opcional: Histórico de transações do usuário, que influenciará as sugestões.')
 });
 
 export type AIPoweredBudgetSuggestionsInput = z.infer<typeof AIPoweredBudgetSuggestionsInputSchema>;
 
 // Define the output schema
 const AIPoweredBudgetSuggestionsOutputSchema = z.object({
-  suggestions: z.string().describe('AI-powered budget suggestions to optimize spending and savings.'),
+  suggestions: z.string().describe('Sugestões de orçamento baseadas em IA para otimizar gastos e economias.'),
 });
 
 export type AIPoweredBudgetSuggestionsOutput = z.infer<typeof AIPoweredBudgetSuggestionsOutputSchema>;
@@ -46,20 +45,20 @@ const prompt = ai.definePrompt({
   name: 'aiPoweredBudgetSuggestionsPrompt',
   input: {schema: AIPoweredBudgetSuggestionsInputSchema},
   output: {schema: AIPoweredBudgetSuggestionsOutputSchema},
-  prompt: `You are a personal finance advisor. Analyze the user's income, expenses, financial goals, and historical transactions (if provided) to provide budget suggestions.
+  prompt: `Você é um consultor financeiro pessoal. Analise a renda, despesas, metas financeiras e histórico de transações do usuário (se fornecido) para fornecer sugestões de orçamento.
 
-  Income: {{{income}}}
-  Expenses:
+  Renda: {{{income}}}
+  Despesas:
   {{#each expenses}}
-  - Category: {{{category}}}, Amount: {{{amount}}}
+  - Categoria: {{{category}}}, Valor: {{{amount}}}
   {{/each}}
-  Financial Goals: {{{financialGoals}}}
+  Metas Financeiras: {{{financialGoals}}}
   {{#if historicalTransactions}}
-  Historical Transactions: {{{historicalTransactions}}}
+  Histórico de Transações: {{{historicalTransactions}}}
   {{/if}}
 
-  Provide specific, actionable suggestions to help the user optimize their spending and savings to reach their financial goals.
-  Focus on expense reduction and saving strategies.
+  Forneça sugestões específicas e acionáveis para ajudar o usuário a otimizar seus gastos e economias para alcançar suas metas financeiras.
+  Concentre-se na redução de despesas e estratégias de economia. Responda em português do Brasil.
   `, 
 });
 

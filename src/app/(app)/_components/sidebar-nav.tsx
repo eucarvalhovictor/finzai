@@ -4,38 +4,65 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarContent,
+  SidebarFooter,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRightLeft, CreditCard, LayoutDashboard, Sparkles, TrendingUp } from 'lucide-react';
+import { ArrowRightLeft, CreditCard, LayoutDashboard, Sparkles, TrendingUp, PlusCircle, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/credit-cards', label: 'Credit Cards', icon: CreditCard },
-  { href: '/investments', label: 'Investments', icon: TrendingUp },
-  { href: '/transactions', label: 'Transactions', icon: ArrowRightLeft },
-  { href: '/budgeting', label: 'AI Budgeting', icon: Sparkles },
+  { href: '/credit-cards', label: 'Cartões de Crédito', icon: CreditCard },
+  { href: '/investments', label: 'Investimentos', icon: TrendingUp },
+  { href: '/transactions', label: 'Transações', icon: ArrowRightLeft },
+  { href: '/budgeting', label: 'Orçamento IA', icon: Sparkles },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <SidebarMenu>
-      {navItems.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname === item.href}
-            tooltip={item.label}
-          >
-            <Link href={item.href}>
-              <item.icon className="text-primary" />
-              <span>{item.label}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
+    <>
+      <SidebarContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Button asChild className="w-full justify-start bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Link href="/transactions?action=add">
+                <PlusCircle />
+                <span>Adicionar Despesa</span>
+              </Link>
+            </Button>
+          </SidebarMenuItem>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={item.label}
+              >
+                <Link href={item.href}>
+                  <item.icon className="text-primary" />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarSeparator />
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+             <SidebarMenuButton tooltip="Sair">
+                <LogOut className="text-destructive" />
+                <span className="text-destructive">Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </>
   );
 }

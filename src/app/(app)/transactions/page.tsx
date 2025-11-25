@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
 import {
   Dialog,
@@ -32,6 +32,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useSearchParams } from 'next/navigation';
 
 function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
   return (
@@ -40,14 +41,15 @@ function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead className="hidden sm:table-cell">Category</TableHead>
-              <TableHead className="hidden md:table-cell">Date</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Descrição</TableHead>
+              <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+              <TableHead className="hidden md:table-cell">Data</TableHead>
+              <TableHead className="text-right">Valor</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction) => (
+            {transactions.length > 0 ? (
+              transactions.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell className="font-medium">{transaction.description}</TableCell>
                 <TableCell className="hidden sm:table-cell">
@@ -58,7 +60,14 @@ function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
                   {transaction.type === 'expense' && '-'}{formatCurrency(Math.abs(transaction.amount))}
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            ) : (
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
+                        Nenhuma transação encontrada.
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
@@ -66,11 +75,11 @@ function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
   );
 }
 
-const transactionCategories = ['Income', 'Housing', 'Food', 'Transport', 'Entertainment', 'Health', 'Shopping', 'Utilities'] as const;
+const transactionCategories = ['Renda', 'Moradia', 'Alimentação', 'Transporte', 'Entretenimento', 'Saúde', 'Compras', 'Serviços'] as const;
 
 const transactionSchema = z.object({
-  description: z.string().min(1, 'Description is required'),
-  amount: z.coerce.number().positive('Amount must be a positive number'),
+  description: z.string().min(1, 'Descrição é obrigatória'),
+  amount: z.coerce.number().positive('O valor deve ser um número positivo'),
   category: z.enum(transactionCategories),
 });
 
@@ -79,6 +88,13 @@ type TransactionFormValues = z.infer<typeof transactionSchema>;
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState(allTransactions);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setIsDialogOpen(true);
+    }
+  }, [searchParams]);
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -91,11 +107,11 @@ export default function TransactionsPage() {
   function onSubmit(data: TransactionFormValues) {
     const newTransaction: Transaction = {
       id: new Date().toISOString(),
-      date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
+      date: new Date().toLocaleDateString('pt-BR'), 
       description: data.description,
-      amount: data.category === 'Income' ? data.amount : -data.amount,
+      amount: data.category === 'Renda' ? data.amount : -data.amount,
       category: data.category,
-      type: data.category === 'Income' ? 'income' : 'expense',
+      type: data.category === 'Renda' ? 'income' : 'expense',
     };
     setTransactions(prev => [newTransaction, ...prev]);
     form.reset();
@@ -108,23 +124,23 @@ export default function TransactionsPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Income & Expenses"
-        description="Track all your financial transactions in one place."
+        title="Rendas & Despesas"
+        description="Acompanhe todas as suas transações financeiras em um só lugar."
       >
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Add Transaction
+              Adicionar Transação
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <DialogHeader>
-                  <DialogTitle>Add New Transaction</DialogTitle>
+                  <DialogTitle>Adicionar Nova Transação</DialogTitle>
                   <DialogDescription>
-                    Fill in the details of your new transaction.
+                    Preencha os detalhes da sua nova transação.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -133,9 +149,9 @@ export default function TransactionsPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Description</FormLabel>
+                        <FormLabel className="text-right">Descrição</FormLabel>
                         <FormControl className="col-span-3">
-                          <Input placeholder="e.g. Coffee" {...field} />
+                          <Input placeholder="Ex: Café" {...field} />
                         </FormControl>
                         <FormMessage className="col-span-4 text-right" />
                       </FormItem>
@@ -146,9 +162,9 @@ export default function TransactionsPage() {
                     name="amount"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Amount</FormLabel>
+                        <FormLabel className="text-right">Valor</FormLabel>
                         <FormControl className="col-span-3">
-                          <Input type="number" placeholder="e.g. 5.50" {...field} />
+                          <Input type="number" placeholder="Ex: 5.50" {...field} />
                         </FormControl>
                         <FormMessage className="col-span-4 text-right" />
                       </FormItem>
@@ -159,11 +175,11 @@ export default function TransactionsPage() {
                     name="category"
                     render={({ field }) => (
                       <FormItem className="grid grid-cols-4 items-center gap-4">
-                        <FormLabel className="text-right">Category</FormLabel>
+                        <FormLabel className="text-right">Categoria</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl className="col-span-3">
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a category" />
+                              <SelectValue placeholder="Selecione uma categoria" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -178,7 +194,7 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="submit">Save Transaction</Button>
+                  <Button type="submit">Salvar Transação</Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -188,9 +204,9 @@ export default function TransactionsPage() {
       
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="income">Income</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="all">Todas</TabsTrigger>
+          <TabsTrigger value="income">Rendas</TabsTrigger>
+          <TabsTrigger value="expenses">Despesas</TabsTrigger>
         </TabsList>
         <TabsContent value="all">
           <TransactionsTable transactions={transactions} />

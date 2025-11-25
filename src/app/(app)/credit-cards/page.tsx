@@ -23,11 +23,11 @@ export default function CreditCardsPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Credit Card Management"
-        description="Track your credit card balances, transactions, and due dates."
+        title="Gerenciamento de Cartões"
+        description="Acompanhe os saldos, transações e datas de vencimento dos seus cartões."
       />
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        {creditCards.map((card) => {
+        {creditCards.length > 0 ? creditCards.map((card) => {
           const usagePercentage = (card.balance / card.limit) * 100;
           return (
             <Card key={card.id}>
@@ -39,7 +39,7 @@ export default function CreditCardsPage() {
                   </span>
                 </div>
                 <CardDescription>
-                  Due on {card.dueDate}
+                  Vencimento em {card.dueDate}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
@@ -51,14 +51,14 @@ export default function CreditCardsPage() {
                     / {formatCurrency(card.limit)}
                   </span>
                 </div>
-                <Progress value={usagePercentage} aria-label={`${usagePercentage.toFixed(0)}% used`} />
+                <Progress value={usagePercentage} aria-label={`${usagePercentage.toFixed(0)}% usado`} />
                 <div>
-                  <h3 className="mb-2 text-sm font-medium">Recent Transactions</h3>
+                  <h3 className="mb-2 text-sm font-medium">Transações Recentes</h3>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -79,7 +79,13 @@ export default function CreditCardsPage() {
               </CardContent>
             </Card>
           );
-        })}
+        }) : (
+            <Card className="flex items-center justify-center h-64 col-span-2">
+                <CardContent>
+                    <p className="text-muted-foreground">Nenhum cartão de crédito adicionado.</p>
+                </CardContent>
+            </Card>
+        )}
       </div>
     </div>
   );

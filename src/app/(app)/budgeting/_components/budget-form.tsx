@@ -26,7 +26,7 @@ export function BudgetForm() {
   const form = useForm<BudgetFormValues>({
     resolver: zodResolver(BudgetSchema),
     defaultValues: {
-      income: 1000,
+      income: 0,
       financialGoals: '',
       historicalTransactions: '',
       expenses: [{ category: '', amount: 0 }],
@@ -56,28 +56,28 @@ export function BudgetForm() {
       <Card>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardHeader>
-            <CardTitle>Your Financial Details</CardTitle>
-            <CardDescription>Provide your financial information for the AI to analyze.</CardDescription>
+            <CardTitle>Seus Detalhes Financeiros</CardTitle>
+            <CardDescription>Forneça suas informações para a IA analisar.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="income">Monthly Income</Label>
-              <Input id="income" type="number" {...form.register('income')} placeholder="e.g., 5000" />
+              <Label htmlFor="income">Renda Mensal</Label>
+              <Input id="income" type="number" {...form.register('income')} placeholder="Ex: 5000" />
               {form.formState.errors.income && <p className="text-sm text-destructive">{form.formState.errors.income.message}</p>}
             </div>
 
             <div className="grid gap-2">
-              <Label>Monthly Expenses</Label>
+              <Label>Despesas Mensais</Label>
               {fields.map((field, index) => (
                 <div key={field.id} className="flex items-center gap-2">
                   <Input
-                    placeholder="Category (e.g., Rent)"
+                    placeholder="Categoria (Ex: Aluguel)"
                     {...form.register(`expenses.${index}.category`)}
                     className="w-1/2"
                   />
                   <Input
                     type="number"
-                    placeholder="Amount"
+                    placeholder="Valor"
                     {...form.register(`expenses.${index}.amount`)}
                     className="w-1/2"
                   />
@@ -88,25 +88,25 @@ export function BudgetForm() {
               ))}
                {form.formState.errors.expenses && <p className="text-sm text-destructive">{form.formState.errors.expenses.message}</p>}
               <Button type="button" variant="outline" onClick={() => append({ category: '', amount: 0 })}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
+                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Despesa
               </Button>
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="financialGoals">Financial Goals</Label>
-              <Textarea id="financialGoals" {...form.register('financialGoals')} placeholder="e.g., Save for a house down payment, pay off student loans..." />
+              <Label htmlFor="financialGoals">Metas Financeiras</Label>
+              <Textarea id="financialGoals" {...form.register('financialGoals')} placeholder="Ex: Economizar para a entrada de uma casa, quitar dívidas..." />
               {form.formState.errors.financialGoals && <p className="text-sm text-destructive">{form.formState.errors.financialGoals.message}</p>}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="historicalTransactions">Historical Transactions (Optional)</Label>
-              <Textarea id="historicalTransactions" {...form.register('historicalTransactions')} placeholder="Paste transaction data (CSV or plain text) for more accurate suggestions." />
+              <Label htmlFor="historicalTransactions">Histórico de Transações (Opcional)</Label>
+              <Textarea id="historicalTransactions" {...form.register('historicalTransactions')} placeholder="Cole dados de transações (CSV ou texto) para sugestões mais precisas." />
             </div>
 
             {!state.isSuccess && state.message && (
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error</AlertTitle>
+                    <AlertTitle>Erro</AlertTitle>
                     <AlertDescription>
                         {state.message}
                         {state.issues && (
@@ -120,7 +120,7 @@ export function BudgetForm() {
 
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">Generate Suggestions</Button>
+            <Button type="submit" className="w-full">Gerar Sugestões</Button>
           </CardFooter>
         </form>
       </Card>
@@ -129,10 +129,10 @@ export function BudgetForm() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bot className="text-primary" />
-            AI Budget Suggestions
+            Sugestões da IA
           </CardTitle>
           <CardDescription>
-            Our AI will provide personalized tips to improve your finances.
+            Nossa IA fornecerá dicas personalizadas para melhorar suas finanças.
           </CardDescription>
         </CardHeader>
         <CardContent className="prose prose-sm prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
@@ -141,7 +141,7 @@ export function BudgetForm() {
               <p>{state.suggestions}</p>
             </div>
           ) : (
-            <p>Your personalized budget suggestions will appear here once you submit your financial details.</p>
+            <p>Suas sugestões de orçamento personalizadas aparecerão aqui.</p>
           )}
         </CardContent>
       </Card>

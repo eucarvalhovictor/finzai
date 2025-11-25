@@ -4,15 +4,15 @@ import { getBudgetSuggestions } from '@/ai/flows/ai-powered-budget-suggestions';
 import { z } from 'zod';
 
 const ExpenseSchema = z.object({
-  category: z.string().min(1, 'Category is required'),
-  amount: z.coerce.number().positive('Amount must be positive'),
+  category: z.string().min(1, 'A categoria é obrigatória'),
+  amount: z.coerce.number().positive('O valor deve ser positivo'),
 });
 
 export const BudgetSchema = z.object({
-  income: z.coerce.number().positive('Income must be a positive number.'),
-  financialGoals: z.string().min(10, 'Financial goals must be at least 10 characters long.'),
+  income: z.coerce.number().positive('A renda deve ser um número positivo.'),
+  financialGoals: z.string().min(10, 'As metas financeiras devem ter pelo menos 10 caracteres.'),
   historicalTransactions: z.string().optional(),
-  expenses: z.array(ExpenseSchema).min(1, 'At least one expense is required.'),
+  expenses: z.array(ExpenseSchema).min(1, 'É necessária pelo menos uma despesa.'),
 });
 
 type BudgetsState = {
@@ -46,7 +46,7 @@ export async function generateBudgetSuggestions(
     return {
       isSuccess: false,
       issues: validatedFields.error.issues.map((issue) => issue.message),
-      message: 'Failed to generate suggestions. Please check your input.',
+      message: 'Falha ao gerar sugestões. Verifique seus dados.',
     };
   }
 
@@ -55,12 +55,12 @@ export async function generateBudgetSuggestions(
     return {
       isSuccess: true,
       suggestions: result.suggestions,
-      message: 'Suggestions generated successfully!',
+      message: 'Sugestões geradas com sucesso!',
     };
   } catch (error) {
     return {
       isSuccess: false,
-      message: 'An unexpected error occurred while generating suggestions.',
+      message: 'Ocorreu um erro inesperado ao gerar sugestões.',
     };
   }
 }

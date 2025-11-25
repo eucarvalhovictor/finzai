@@ -25,13 +25,13 @@ export default function DashboardPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Financial Overview"
-        description="Here's a summary of your current financial status."
+        title="Visão Geral Financeira"
+        description="Aqui está um resumo do seu status financeiro atual."
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+            <CardTitle className="text-sm font-medium">Patrimônio Líquido</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -39,13 +39,13 @@ export default function DashboardPage() {
               {formatCurrency(financialSummary.netWorth)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Your total financial health
+              Sua saúde financeira total
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
             <Landmark className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -53,13 +53,13 @@ export default function DashboardPage() {
               {formatCurrency(financialSummary.totalBalance)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Across all your accounts
+              Em todas as suas contas
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Debt</CardTitle>
+            <CardTitle className="text-sm font-medium">Dívida Total</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -67,7 +67,7 @@ export default function DashboardPage() {
               {formatCurrency(financialSummary.totalDebt)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Credit card balances
+              Saldos de cartão de crédito
             </p>
           </CardContent>
         </Card>
@@ -75,8 +75,8 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Income vs. Expenses</CardTitle>
-            <CardDescription>Monthly cash flow for the last 6 months.</CardDescription>
+            <CardTitle>Renda vs. Despesas</CardTitle>
+            <CardDescription>Fluxo de caixa mensal dos últimos 6 meses.</CardDescription>
           </CardHeader>
           <CardContent>
             <DashboardChart />
@@ -84,18 +84,18 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
+            <CardTitle>Transações Recentes</CardTitle>
             <CardDescription>
-              Your latest financial activities.
+              Suas últimas atividades financeiras.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

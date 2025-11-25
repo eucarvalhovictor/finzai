@@ -5,8 +5,8 @@ export default function BudgetingPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="AI-Powered Budgeting"
-        description="Get smart suggestions to optimize your spending and reach your financial goals."
+        title="Orçamento com IA"
+        description="Receba sugestões inteligentes para otimizar seus gastos e alcançar seus objetivos."
       />
       <BudgetForm />
     </div>
