@@ -12,6 +12,8 @@ import { useFirebase, addDocumentNonBlocking, useCollection, useMemoFirebase } f
 import { collection } from 'firebase/firestore';
 import type { CreditCard } from '@/lib/types';
 import { serverTimestamp } from 'firebase/firestore';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useEffect, useState } from 'react';
 
 const transactionCategories = [
   'Moradia',
@@ -59,6 +61,12 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
   const { firestore, user } = useFirebase();
+  const isMobile = useIsMobile();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const creditCardsRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -104,69 +112,67 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
     onTransactionSaved();
   }
 
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-4">
-           <FormField
+  const renderDesktopForm = () => (
+    <>
+        <FormField
             control={form.control}
             name="transactionType"
             render={({ field }) => (
-              <FormItem className="space-y-3">
+            <FormItem className="space-y-3">
                 <FormLabel>Tipo de Transação</FormLabel>
                 <FormControl>
-                  <RadioGroup
+                <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                     className="flex flex-col sm:flex-row sm:space-x-4"
-                  >
+                >
                     <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <RadioGroupItem value="expense" id="expense" />
-                      </FormControl>
-                      <FormLabel htmlFor="expense" className="font-normal">Despesa</FormLabel>
+                    <FormControl>
+                        <RadioGroupItem value="expense" id="expense_desktop" />
+                    </FormControl>
+                    <FormLabel htmlFor="expense_desktop" className="font-normal">Despesa</FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <RadioGroupItem value="income" id="income" />
-                      </FormControl>
-                      <FormLabel htmlFor="income" className="font-normal">Receita</FormLabel>
+                    <FormControl>
+                        <RadioGroupItem value="income" id="income_desktop" />
+                    </FormControl>
+                    <FormLabel htmlFor="income_desktop" className="font-normal">Receita</FormLabel>
                     </FormItem>
-                  </RadioGroup>
+                </RadioGroup>
                 </FormControl>
                 <FormMessage />
-              </FormItem>
+            </FormItem>
             )}
-          />
+        />
 
-          <FormField
+        <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem>
+            <FormItem>
                 <FormLabel>Descrição</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: Café na padaria" {...field} />
+                <Input placeholder="Ex: Café na padaria" {...field} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
+            </FormItem>
             )}
-          />
-          <FormField
+        />
+        <FormField
             control={form.control}
             name="amount"
             render={({ field }) => (
-              <FormItem>
+            <FormItem>
                 <FormLabel>Valor</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="Ex: 5.50" {...field} />
+                <Input type="number" step="0.01" placeholder="Ex: 5.50" {...field} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
+            </FormItem>
             )}
-          />
+        />
 
-          {transactionType === 'expense' && (
+        {transactionType === 'expense' && (
             <FormField
                 control={form.control}
                 name="category"
@@ -191,66 +197,194 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
                 </FormItem>
                 )}
             />
-          )}
-          
-          <FormField
+        )}
+        
+        <FormField
             control={form.control}
             name="paymentMethod"
             render={({ field }) => (
-              <FormItem className="space-y-3">
+            <FormItem className="space-y-3">
                 <FormLabel>Forma de Pagamento</FormLabel>
                 <FormControl>
-                  <RadioGroup
+                <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                     className="flex flex-col sm:flex-row sm:space-x-4"
-                  >
+                >
                     <FormItem className="flex items-center space-x-2">
-                      <FormControl><RadioGroupItem value="cash" id="cash" /></FormControl>
-                      <FormLabel htmlFor="cash" className="font-normal">Dinheiro</FormLabel>
+                    <FormControl><RadioGroupItem value="cash" id="cash_desktop" /></FormControl>
+                    <FormLabel htmlFor="cash_desktop" className="font-normal">Dinheiro</FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-2">
-                      <FormControl><RadioGroupItem value="pix" id="pix" /></FormControl>
-                      <FormLabel htmlFor="pix" className="font-normal">Pix</FormLabel>
+                    <FormControl><RadioGroupItem value="pix" id="pix_desktop" /></FormControl>
+                    <FormLabel htmlFor="pix_desktop" className="font-normal">Pix</FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-2">
-                      <FormControl><RadioGroupItem value="card" id="card" /></FormControl>
-                      <FormLabel htmlFor="card" className="font-normal">Cartão</FormLabel>
+                    <FormControl><RadioGroupItem value="card" id="card_desktop" /></FormControl>
+                    <FormLabel htmlFor="card_desktop" className="font-normal">Cartão</FormLabel>
                     </FormItem>
-                  </RadioGroup>
+                </RadioGroup>
                 </FormControl>
                 <FormMessage />
-              </FormItem>
+            </FormItem>
             )}
-          />
+        />
 
-          {paymentMethod === 'card' && (
+        {paymentMethod === 'card' && (
             <FormField
-              control={form.control}
-              name="creditCardId"
-              render={({ field }) => (
+            control={form.control}
+            name="creditCardId"
+            render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cartão de Crédito</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCards}>
+                <FormLabel>Cartão de Crédito</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCards}>
                     <FormControl>
-                      <SelectTrigger>
+                    <SelectTrigger>
                         <SelectValue placeholder={isLoadingCards ? "Carregando..." : "Selecione o cartão"} />
-                      </SelectTrigger>
+                    </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {creditCards?.map((card) => (
+                    {creditCards?.map((card) => (
                         <SelectItem key={card.id} value={card.id}>
-                          {card.cardHolderName} (final {card.cardNumber.slice(-4)})
+                        {card.cardHolderName} (final {card.cardNumber.slice(-4)})
                         </SelectItem>
-                      ))}
+                    ))}
                     </SelectContent>
-                  </Select>
-                  <FormMessage />
+                </Select>
+                <FormMessage />
                 </FormItem>
-              )}
+            )}
             />
-          )}
+        )}
+    </>
+  );
 
+  const renderMobileForm = () => (
+     <>
+        <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+            <FormItem>
+                <FormLabel>Descrição</FormLabel>
+                <FormControl>
+                <Input placeholder="Ex: Café na padaria" {...field} />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
+        <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+            <FormItem>
+                <FormLabel>Valor</FormLabel>
+                <FormControl>
+                <Input type="number" step="0.01" placeholder="Ex: 5.50" {...field} />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
+        <FormField
+            control={form.control}
+            name="transactionType"
+            render={({ field }) => (
+            <FormItem>
+                <FormLabel>Tipo</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione um tipo" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                        <SelectItem value="expense">Despesa</SelectItem>
+                        <SelectItem value="income">Receita</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
+        
+        {transactionType === 'expense' && (
+            <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {transactionCategories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                            {cat}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        )}
+
+        <FormField
+            control={form.control}
+            name="paymentMethod"
+            render={({ field }) => (
+            <FormItem>
+                <FormLabel>Pagamento</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione a forma" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                        <SelectItem value="cash">Dinheiro</SelectItem>
+                        <SelectItem value="pix">Pix</SelectItem>
+                        <SelectItem value="card">Cartão</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
+
+        {paymentMethod === 'card' && (
+            <FormField
+            control={form.control}
+            name="creditCardId"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Cartão de Crédito</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCards}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder={isLoadingCards ? "Carregando..." : "Selecione o cartão"} />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    {creditCards?.map((card) => (
+                        <SelectItem key={card.id} value={card.id}>
+                        {card.cardHolderName} (final {card.cardNumber.slice(-4)})
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        )}
+    </>
+  );
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-4">
+          {hasMounted && isMobile ? renderMobileForm() : renderDesktopForm()}
         </div>
         <div className="pt-4">
           <Button type="submit" className="w-full">Salvar Transação</Button>
