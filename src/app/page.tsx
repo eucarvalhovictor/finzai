@@ -135,7 +135,7 @@ export default function LandingPage() {
               <a href="#faq" onClick={(e) => handleScrollTo(e, 'faq')}>FAQ</a>
             </Button>
           </nav>
-          <Button asChild>
+          <Button variant="outline" asChild>
               <Link href="/login">
                 <LogIn className="mr-2" />
                 Área de Membros

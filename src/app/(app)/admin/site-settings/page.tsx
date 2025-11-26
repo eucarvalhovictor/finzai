@@ -16,12 +16,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { SeoSettings } from '@/lib/types';
-import { Upload } from 'lucide-react';
+import { Upload, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 
 const seoSchema = z.object({
   siteTitle: z.string().min(1, 'O título do site é obrigatório.'),
   defaultDescription: z.string().min(1, 'A descrição é obrigatória.'),
+  faviconUrl: z.string().optional(),
+  logoUrl: z.string().optional(),
 });
 
 type SeoFormValues = z.infer<typeof seoSchema>;
@@ -31,6 +33,7 @@ export default function AdminSiteSettingsPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const seoSettingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -44,6 +47,8 @@ export default function AdminSiteSettingsPage() {
     defaultValues: {
       siteTitle: '',
       defaultDescription: '',
+      faviconUrl: '',
+      logoUrl: '',
     },
   });
 
@@ -52,26 +57,31 @@ export default function AdminSiteSettingsPage() {
       form.reset({
         siteTitle: seoSettings.siteTitle || '',
         defaultDescription: seoSettings.defaultDescription || '',
+        faviconUrl: seoSettings.faviconUrl || '',
+        logoUrl: seoSettings.logoUrl || '',
       });
+       if (seoSettings.faviconUrl) {
+          setFaviconPreview(seoSettings.faviconUrl);
+      }
+      if (seoSettings.logoUrl) {
+          setLogoPreview(seoSettings.logoUrl);
+      }
     }
   }, [seoSettings, form]);
   
-  const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: string) => void, fieldName: keyof SeoFormValues) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFaviconPreview(reader.result as string);
-        // Em um app real, aqui você faria o upload do arquivo para o Firebase Storage
-        // e salvaria a URL no Firestore. Por enquanto, apenas exibimos o preview.
-        toast({
-            title: 'Pré-visualização do Favicon',
-            description: 'Em uma aplicação real, o upload para o servidor seria feito aqui.',
-        })
+        const dataUrl = reader.result as string;
+        setter(dataUrl);
+        form.setValue(fieldName, dataUrl, { shouldDirty: true });
       };
       reader.readAsDataURL(file);
     }
   };
+
 
   async function onSubmit(data: SeoFormValues) {
     if (!seoSettingsRef) return;
@@ -80,13 +90,14 @@ export default function AdminSiteSettingsPage() {
       setDocumentNonBlocking(seoSettingsRef, data, { merge: true });
       toast({
         title: 'Configurações Salvas!',
-        description: 'Suas configurações de SEO foram atualizadas com sucesso.',
+        description: 'Suas configurações de SEO e de marca foram atualizadas com sucesso.',
       });
+      form.reset(data, { keepValues: true }); // Resets dirty state
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Erro ao Salvar',
-        description: 'Não foi possível salvar as configurações de SEO.',
+        description: 'Não foi possível salvar as configurações.',
       });
     } finally {
       setIsSubmitting(false);
@@ -101,7 +112,7 @@ export default function AdminSiteSettingsPage() {
       />
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
           <Card>
             <CardHeader>
               <CardTitle>SEO Global & Meta Tags</CardTitle>
@@ -155,43 +166,79 @@ export default function AdminSiteSettingsPage() {
                 </>
               )}
             </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isSubmitting || isLoading}>
-                {isSubmitting ? 'Salvando...' : 'Salvar Configurações de SEO'}
-              </Button>
-            </CardFooter>
           </Card>
+          
+           <Card>
+                <CardHeader>
+                    <CardTitle>Marca</CardTitle>
+                    <CardDescription>
+                        Personalize a logo e o favicon que aparecem no site.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                     <FormField
+                        control={form.control}
+                        name="logoUrl"
+                        render={() => (
+                           <FormItem>
+                            <FormLabel>Logo do Projeto</FormLabel>
+                            <div className="flex items-center gap-4">
+                                {logoPreview ? (
+                                    <Image src={logoPreview} alt="Pré-visualização da Logo" width={128} height={32} className="rounded-md object-contain h-8" />
+                                ) : (
+                                    <div className="flex h-12 w-32 items-center justify-center rounded-md border bg-muted">
+                                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                                    </div>
+                                )}
+                                <Button asChild variant="outline">
+                                    <label htmlFor="logo-upload" className="cursor-pointer">
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Carregar Logo
+                                    <Input id="logo-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={(e) => handleFileChange(e, setLogoPreview, 'logoUrl')} />
+                                    </label>
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground pt-1">Pelo menos 64x64 pixels. Fundo transparente recomendado (.png ou .svg).</p>
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="faviconUrl"
+                        render={() => (
+                            <FormItem>
+                                <FormLabel>Favicon</FormLabel>
+                                <div className="flex items-center gap-4">
+                                    {faviconPreview ? (
+                                        <Image src={faviconPreview} alt="Pré-visualização do Favicon" width={32} height={32} className="rounded-md" />
+                                    ) : (
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-md border bg-muted">
+                                            <Upload className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    )}
+                                    <Button asChild variant="outline">
+                                        <label htmlFor="favicon-upload" className="cursor-pointer">
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        Carregar Favicon
+                                        <Input id="favicon-upload" type="file" className="hidden" accept="image/png, image/x-icon, image/vnd.microsoft.icon" onChange={(e) => handleFileChange(e, setFaviconPreview, 'faviconUrl')} />
+                                        </label>
+                                    </Button>
+                                </div>
+                                 <p className="text-xs text-muted-foreground pt-1">Recomendado: imagem .png ou .ico de 32x32 pixels.</p>
+                            </FormItem>
+                        )}
+                    />
+                </CardContent>
+            </Card>
+
+
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting || isLoading || !form.formState.isDirty}>
+              {isSubmitting ? 'Salvando...' : 'Salvar Todas as Configurações'}
+            </Button>
+          </div>
         </form>
       </Form>
-
-       <Card>
-        <CardHeader>
-          <CardTitle>Favicon</CardTitle>
-          <CardDescription>
-            Faça o upload do ícone que aparece na aba do navegador. Recomenda-se uma imagem .png ou .ico de 32x32 pixels.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <FormItem>
-                <div className="flex items-center gap-4">
-                    {faviconPreview ? (
-                        <Image src={faviconPreview} alt="Pré-visualização do Favicon" width={32} height={32} className="rounded-md" />
-                    ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-md border bg-muted">
-                            <Upload className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                    )}
-                    <Button asChild variant="outline">
-                        <label htmlFor="favicon-upload" className="cursor-pointer">
-                        <Upload className="mr-2 h-4 w-4" />
-                        Carregar Favicon
-                        <Input id="favicon-upload" type="file" className="hidden" accept="image/png, image/x-icon, image/vnd.microsoft.icon" onChange={handleFaviconChange} />
-                        </label>
-                    </Button>
-                </div>
-            </FormItem>
-        </CardContent>
-      </Card>
     </div>
   );
 }

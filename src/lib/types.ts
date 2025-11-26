@@ -64,4 +64,5 @@ export type SeoSettings = {
   siteTitle: string;
   defaultDescription: string;
   faviconUrl?: string;
+  logoUrl?: string;
 };
