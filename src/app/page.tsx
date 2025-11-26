@@ -146,7 +146,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-24 sm:py-32 animate-on-scroll">
+        <section className="relative flex flex-col justify-center min-h-screen py-24 sm:py-32 animate-on-scroll">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="mb-6 flex justify-center animate-on-scroll">
                 <div className="inline-flex items-center gap-2 bg-muted/50 text-foreground py-2 px-4 rounded-full border">
@@ -174,7 +174,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
 
         {/* Why Choose Us Section */}
-        <section id="benefits" className="py-20 sm:py-24 bg-muted/30">
+        <section id="benefits" className="flex flex-col justify-center min-h-screen py-20 sm:py-24 bg-muted/30">
              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
                     <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Porque escolher a FinzAI?</h2>
@@ -223,7 +223,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
 
         {/* Testimonials Section */}
-        <section id="testimonials" className="py-20 sm:py-24">
+        <section id="testimonials" className="flex flex-col justify-center min-h-screen py-20 sm:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="max-w-2xl text-center mx-auto mb-12 animate-on-scroll">
                     <div className="flex items-center justify-center gap-1 mb-2">
@@ -269,7 +269,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-20 sm:py-24 bg-muted/30">
+        <section id="pricing" className="flex flex-col justify-center min-h-screen py-20 sm:py-24 bg-muted/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-xl mx-auto text-center mb-4 animate-on-scroll">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Planos para cada jornada financeira</h2>
@@ -354,7 +354,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
 
          {/* FAQ Section */}
-        <section id="faq" className="py-20 sm:py-24">
+        <section id="faq" className="flex flex-col justify-center min-h-screen py-20 sm:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl">
                 <div className="text-center mb-12 animate-on-scroll">
                     <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Perguntas Frequentes</h2>
