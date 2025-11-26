@@ -5,16 +5,18 @@ import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent } from '@/components/ui/card';
-import { Lock, PlusCircle } from 'lucide-react';
+import { Lock, PlusCircle, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserManagementTable } from '../_components/user-management-table';
 import { AddUserDialog } from '../_components/add-user-dialog';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { Input } from '@/components/ui/input';
 
 export default function AdminUsersPage() {
   const { user, firestore } = useFirebase();
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -61,7 +63,7 @@ export default function AdminUsersPage() {
   return (
     <>
       <div className="grid gap-6">
-         <div className="flex items-center justify-between">
+         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <PageHeader
                 title="Gerenciamento de Usuários"
                 description="Gerencie os cargos e permissões dos usuários do sistema."
@@ -71,7 +73,16 @@ export default function AdminUsersPage() {
                 Adicionar Usuário
             </Button>
         </div>
-        <UserManagementTable />
+        <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+                placeholder="Filtrar usuários por nome ou email..."
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+        <UserManagementTable searchTerm={searchTerm} />
       </div>
       <AddUserDialog isOpen={isAddUserOpen} onOpenChange={setIsAddUserOpen} />
     </>

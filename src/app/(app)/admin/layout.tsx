@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { Lock, BarChart2, Users, Tag, Search } from 'lucide-react';
+import { Lock, BarChart2, Users, Tag, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ const adminNavItems = [
   { href: '/admin/metrics', label: 'Métricas', icon: BarChart2 },
   { href: '/admin/users', label: 'Usuários', icon: Users },
   { href: '/admin/coupons', label: 'Cupons', icon: Tag },
-  { href: '/admin/seo', label: 'SEO', icon: Search },
+  { href: '/admin/site-settings', label: 'Configurações do Site', icon: Settings },
 ];
 
 export default function AdminLayout({

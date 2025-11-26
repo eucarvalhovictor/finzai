@@ -13,9 +13,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useFirebase, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { SeoSettings } from '@/lib/types';
+import { Upload } from 'lucide-react';
+import Image from 'next/image';
 
 const seoSchema = z.object({
   siteTitle: z.string().min(1, 'O título do site é obrigatório.'),
@@ -24,10 +26,11 @@ const seoSchema = z.object({
 
 type SeoFormValues = z.infer<typeof seoSchema>;
 
-export default function AdminSeoPage() {
+export default function AdminSiteSettingsPage() {
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
 
   const seoSettingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -52,12 +55,29 @@ export default function AdminSeoPage() {
       });
     }
   }, [seoSettings, form]);
+  
+  const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFaviconPreview(reader.result as string);
+        // Em um app real, aqui você faria o upload do arquivo para o Firebase Storage
+        // e salvaria a URL no Firestore. Por enquanto, apenas exibimos o preview.
+        toast({
+            title: 'Pré-visualização do Favicon',
+            description: 'Em uma aplicação real, o upload para o servidor seria feito aqui.',
+        })
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   async function onSubmit(data: SeoFormValues) {
     if (!seoSettingsRef) return;
     setIsSubmitting(true);
     try {
-      await setDoc(seoSettingsRef, data, { merge: true });
+      setDocumentNonBlocking(seoSettingsRef, data, { merge: true });
       toast({
         title: 'Configurações Salvas!',
         description: 'Suas configurações de SEO foram atualizadas com sucesso.',
@@ -76,15 +96,15 @@ export default function AdminSeoPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Controle de SEO"
-        description="Gerencie as meta tags, sitemaps e outras configurações de SEO do site."
+        title="Configurações do Site"
+        description="Gerencie as meta tags, favicon e outras configurações globais do site."
       />
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardHeader>
-              <CardTitle>SEO Global</CardTitle>
+              <CardTitle>SEO Global & Meta Tags</CardTitle>
               <CardDescription>
                 Defina o título padrão e a descrição para todo o site. Eles serão usados em páginas que não possuem metadados específicos.
               </CardDescription>
@@ -108,7 +128,7 @@ export default function AdminSeoPage() {
                     name="siteTitle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Título do Site</FormLabel>
+                        <FormLabel>Título do Site (Meta Title)</FormLabel>
                         <FormControl>
                           <Input placeholder="Ex: FinzAI - Sua Plataforma Financeira" {...field} />
                         </FormControl>
@@ -121,7 +141,7 @@ export default function AdminSeoPage() {
                     name="defaultDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Descrição Padrão</FormLabel>
+                        <FormLabel>Descrição Padrão (Meta Description)</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Ex: Gerencie suas finanças, investimentos e cartões de crédito de forma inteligente com FinzAI."
@@ -137,12 +157,41 @@ export default function AdminSeoPage() {
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={isSubmitting || isLoading}>
-                {isSubmitting ? 'Salvando...' : 'Salvar Configurações'}
+                {isSubmitting ? 'Salvando...' : 'Salvar Configurações de SEO'}
               </Button>
             </CardFooter>
           </Card>
         </form>
       </Form>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Favicon</CardTitle>
+          <CardDescription>
+            Faça o upload do ícone que aparece na aba do navegador. Recomenda-se uma imagem .png ou .ico de 32x32 pixels.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <FormItem>
+                <div className="flex items-center gap-4">
+                    {faviconPreview ? (
+                        <Image src={faviconPreview} alt="Pré-visualização do Favicon" width={32} height={32} className="rounded-md" />
+                    ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md border bg-muted">
+                            <Upload className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                    )}
+                    <Button asChild variant="outline">
+                        <label htmlFor="favicon-upload" className="cursor-pointer">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Carregar Favicon
+                        <Input id="favicon-upload" type="file" className="hidden" accept="image/png, image/x-icon, image/vnd.microsoft.icon" onChange={handleFaviconChange} />
+                        </label>
+                    </Button>
+                </div>
+            </FormItem>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -41,12 +41,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import React from 'react';
+import React, { useMemo } from 'react';
+import { Card } from '@/components/ui/card';
 
 
 const roles: UserRole[] = ['basico', 'completo', 'admin'];
 
-export function UserManagementTable() {
+interface UserManagementTableProps {
+  searchTerm: string;
+}
+
+export function UserManagementTable({ searchTerm }: UserManagementTableProps) {
   const { firestore, user } = useFirebase();
   const { toast } = useToast();
   const [userToDelete, setUserToDelete] = React.useState<UserProfile | null>(null);
@@ -57,6 +62,17 @@ export function UserManagementTable() {
   }, [firestore]);
 
   const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    if (!searchTerm) return users;
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return users.filter(u => 
+      u.firstName.toLowerCase().includes(lowercasedFilter) ||
+      (u.lastName && u.lastName.toLowerCase().includes(lowercasedFilter)) ||
+      u.email.toLowerCase().includes(lowercasedFilter)
+    );
+  }, [users, searchTerm]);
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     if (!firestore || !user) {
@@ -118,6 +134,7 @@ export function UserManagementTable() {
 
   return (
     <>
+    <Card>
     <Table>
       <TableHeader>
         <TableRow>
@@ -137,10 +154,10 @@ export function UserManagementTable() {
               <TableCell><Skeleton className="h-10 w-8" /></TableCell>
             </TableRow>
           ))
-        ) : users && users.length > 0 ? (
-          users.map((u) => (
+        ) : filteredUsers && filteredUsers.length > 0 ? (
+          filteredUsers.map((u) => (
             <TableRow key={u.id}>
-              <TableCell className="font-medium">{`${u.firstName} ${u.lastName}`}</TableCell>
+              <TableCell className="font-medium">{`${u.firstName} ${u.lastName || ''}`}</TableCell>
               <TableCell>{u.email}</TableCell>
               <TableCell>
                 <Select
@@ -214,6 +231,7 @@ export function UserManagementTable() {
         )}
       </TableBody>
     </Table>
+    </Card>
     </>
   );
 }

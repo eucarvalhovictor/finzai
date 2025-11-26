@@ -78,7 +78,13 @@
   * {
     @apply border-border;
   }
+  html, body {
+    @apply h-full min-h-[100svh];
+  }
   body {
     @apply bg-background text-foreground;
+  }
+  .auth-layout {
+    @apply h-full min-h-[100svh] overflow-y-hidden;
   }
 }
