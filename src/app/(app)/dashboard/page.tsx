@@ -120,7 +120,7 @@ export default function DashboardPage() {
     </Card>
   );
 
-  const userName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : (user?.displayName || 'Usuário');
+  const userName = userProfile ? `${userProfile.firstName}` : (user?.displayName?.split(' ')[0] || 'Usuário');
   const pageTitle = isLoadingProfile || !greeting ? 'Carregando...' : `${greeting}, ${userName}`;
 
   return (
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold sm:text-2xl">
                   {formatCurrency(financialSummary.netWorth)}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -158,7 +158,7 @@ export default function DashboardPage() {
                 <Landmark className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold sm:text-2xl">
                   {formatCurrency(financialSummary.totalBalance)}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -172,7 +172,7 @@ export default function DashboardPage() {
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-destructive">
+                <div className="text-xl font-bold text-destructive sm:text-2xl">
                   {formatCurrency(financialSummary.totalDebt)}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -205,7 +205,7 @@ export default function DashboardPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Descrição</TableHead>
-                  <TableHead>Categoria</TableHead>
+                  <TableHead className="hidden sm:table-cell">Categoria</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                 </TableRow>
               </TableHeader>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
                       <TableCell className="text-right"><Skeleton className="h-5 w-16" /></TableCell>
                     </TableRow>
                   ))
@@ -225,7 +225,7 @@ export default function DashboardPage() {
                         <div className="font-medium">{transaction.description}</div>
                         <div className="text-sm text-muted-foreground">{formatFirebaseTimestamp(transaction.date)}</div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Badge variant="outline">{transaction.category}</Badge>
                       </TableCell>
                       <TableCell className={`text-right font-medium ${transaction.transactionType === 'income' ? 'text-primary' : 'text-foreground'}`}>
