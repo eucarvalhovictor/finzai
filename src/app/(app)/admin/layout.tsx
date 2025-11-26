@@ -86,7 +86,7 @@ export default function AdminLayout({
             </Link>
         ))}
       </nav>
-      <div className="animate-fade-in">
+      <div>
         {children}
       </div>
     </div>
