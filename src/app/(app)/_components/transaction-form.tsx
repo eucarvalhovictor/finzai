@@ -28,7 +28,7 @@ const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.coerce.number().positive('O valor deve ser um número positivo'),
   transactionType: z.enum(['income', 'expense'], { required_error: 'Selecione o tipo.' }),
-  category: z.string().min(1, 'Selecione uma categoria.'),
+  category: z.string().optional(),
   paymentMethod: z.enum(['cash', 'pix', 'card'], { required_error: 'Selecione o método.' }),
   creditCardId: z.string().optional(),
 }).refine(data => {
@@ -39,7 +39,17 @@ const transactionSchema = z.object({
 }, {
   message: 'Selecione um cartão de crédito.',
   path: ['creditCardId'],
+}).refine(data => {
+    // A categoria só é obrigatória se for uma despesa
+    if (data.transactionType === 'expense') {
+        return !!data.category && data.category.length > 0;
+    }
+    return true;
+}, {
+    message: 'Selecione uma categoria.',
+    path: ['category'],
 });
+
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
