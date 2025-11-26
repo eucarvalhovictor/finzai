@@ -165,12 +165,14 @@ export function SidebarNav() {
         <DialogTrigger asChild>
           {AddTransactionButton}
         </DialogTrigger>
-        <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Adicionar Nova Transação</DialogTitle>
-              <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
-            </DialogHeader>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Adicionar Nova Transação</DialogTitle>
+            <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] pr-4">
             <TransactionForm onTransactionSaved={handleTransactionSaved} />
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     );
