@@ -7,9 +7,9 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 relative">
+    <div className="flex min-h-screen flex-col items-center sm:justify-center p-4 relative">
       <DotsBackground />
-      <div className="mb-8 z-10">
+      <div className="mb-8 z-10 pt-16 sm:pt-0">
         <AppLogo />
       </div>
       <div className="z-10 w-full">
