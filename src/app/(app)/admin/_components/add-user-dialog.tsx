@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { UserRole } from '@/lib/types';
 
-const roles: UserRole[] = ['basico', 'completo', 'admin'];
+const roles = ['basico', 'completo', 'admin'] as const;
 
 const userSchema = z.object({
   firstName: z.string().min(1, 'Nome é obrigatório.'),
