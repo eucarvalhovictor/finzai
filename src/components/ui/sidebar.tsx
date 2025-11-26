@@ -271,7 +271,7 @@ const SidebarTrigger = React.forwardRef<
         ref={ref}
         data-sidebar="trigger"
         variant="ghost"
-        className={cn("h-7 justify-start", className)}
+        className={cn("h-7 justify-start bg-transparent hover:bg-transparent focus:bg-transparent", className)}
         onClick={(event) => {
           onClick?.(event)
           toggleSidebar()

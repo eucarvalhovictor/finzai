@@ -59,7 +59,7 @@ export default function AppLayout({
           <div className="flex items-center gap-2 md:hidden">
             <SidebarTrigger />
           </div>
-          <div className="hidden flex-1 md:absolute md:inset-x-0 md:flex md:items-center md:justify-center md:text-center">
+          <div className="absolute inset-x-0 flex items-center justify-center text-center -z-10">
              <AppLogo />
           </div>
           <div className="flex-1" />
