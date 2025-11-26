@@ -45,7 +45,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from './transaction-form';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
@@ -68,9 +68,15 @@ export function SidebarNav() {
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const [hasMounted, setHasMounted] = useState(false);
+
   const { auth, user, firestore } = useFirebase();
   const router = useRouter();
   
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, `users/${user.uid}`);
@@ -110,6 +116,53 @@ export function SidebarNav() {
     return name.charAt(0).toUpperCase();
   };
 
+  const renderAddTransaction = () => {
+    if (!hasMounted) {
+      return (
+          <SidebarMenuButton
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            tooltip="Adicionar Transação"
+            disabled
+          >
+          <PlusCircle />
+          <span>Adicionar Transação</span>
+        </SidebarMenuButton>
+      );
+    }
+    if (isMobile) {
+      return (
+        <Sheet open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <SheetTrigger asChild>
+            {AddTransactionButton}
+          </SheetTrigger>
+          <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-lg">
+             <SheetHeader>
+                <SheetTitle>Adicionar Nova Transação</SheetTitle>
+                <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
+              </SheetHeader>
+              <div className="py-4">
+                <TransactionForm onTransactionSaved={handleTransactionSaved} />
+              </div>
+          </SheetContent>
+        </Sheet>
+      );
+    }
+    return (
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
+          {AddTransactionButton}
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Adicionar Nova Transação</DialogTitle>
+              <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
+            </DialogHeader>
+            <TransactionForm onTransactionSaved={handleTransactionSaved} />
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <>
       <SidebarContent>
@@ -130,35 +183,7 @@ export function SidebarNav() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-           {isMobile ? (
-              <Sheet open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <SheetTrigger asChild>
-                  {AddTransactionButton}
-                </SheetTrigger>
-                <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-lg">
-                   <SheetHeader>
-                      <SheetTitle>Adicionar Nova Transação</SheetTitle>
-                      <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
-                    </SheetHeader>
-                    <div className="py-4">
-                      <TransactionForm onTransactionSaved={handleTransactionSaved} />
-                    </div>
-                </SheetContent>
-              </Sheet>
-            ) : (
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  {AddTransactionButton}
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle>Adicionar Nova Transação</DialogTitle>
-                      <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
-                    </DialogHeader>
-                    <TransactionForm onTransactionSaved={handleTransactionSaved} />
-                </DialogContent>
-              </Dialog>
-            )}
+           {renderAddTransaction()}
           </SidebarMenuItem>
            <SidebarSeparator />
            <SidebarMenuItem>

@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -94,6 +94,11 @@ export default function TransactionsPage() {
   const { user, firestore } = useFirebase();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const handleTransactionSaved = () => {
     setIsDialogOpen(false);
@@ -116,41 +121,56 @@ export default function TransactionsPage() {
   const incomeTransactions = transactions?.filter(t => t.transactionType === 'income') || [];
   const expenseTransactions = transactions?.filter(t => t.transactionType === 'expense') || [];
 
+  const renderAddTransaction = () => {
+    if (!hasMounted) {
+      return (
+        <Button disabled>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Adicionar Transação
+        </Button>
+      );
+    }
+    if (isMobile) {
+      return (
+        <Sheet open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <SheetTrigger asChild>
+            {AddTransactionButton}
+          </SheetTrigger>
+          <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-lg">
+            <SheetHeader>
+              <SheetTitle>Adicionar Nova Transação</SheetTitle>
+              <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
+            </SheetHeader>
+            <div className="py-4">
+              <TransactionForm onTransactionSaved={handleTransactionSaved} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      );
+    }
+    return (
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
+          {AddTransactionButton}
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Adicionar Nova Transação</DialogTitle>
+            <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
+          </DialogHeader>
+          <TransactionForm onTransactionSaved={handleTransactionSaved} />
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="grid gap-6">
       <PageHeader
         title="Rendas & Despesas"
         description="Acompanhe todas as suas transações financeiras em um só lugar."
       >
-        {isMobile ? (
-            <Sheet open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <SheetTrigger asChild>
-                    {AddTransactionButton}
-                </SheetTrigger>
-                <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-lg">
-                    <SheetHeader>
-                        <SheetTitle>Adicionar Nova Transação</SheetTitle>
-                        <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
-                    </SheetHeader>
-                    <div className="py-4">
-                        <TransactionForm onTransactionSaved={handleTransactionSaved} />
-                    </div>
-                </SheetContent>
-            </Sheet>
-        ) : (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                    {AddTransactionButton}
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Adicionar Nova Transação</DialogTitle>
-                        <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
-                    </DialogHeader>
-                    <TransactionForm onTransactionSaved={handleTransactionSaved} />
-                </DialogContent>
-            </Dialog>
-        )}
+        {renderAddTransaction()}
       </PageHeader>
       
       <Tabs defaultValue="all">
@@ -172,5 +192,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
-    
