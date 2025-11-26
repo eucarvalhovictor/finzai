@@ -67,8 +67,21 @@ const testimonials = [
     role: 'Pequeno Empresário',
     avatar: 'FL',
     comment: 'A FinzAI transformou a maneira como eu vejo meu patrimônio. Acompanhar meus investimentos junto com as despesas me deu uma clareza que nenhuma outra plataforma ofereceu.'
+  },
+  {
+    name: 'Ana B.',
+    role: 'Advogada',
+    avatar: 'AB',
+    comment: 'A segurança era minha maior preocupação e a FinzAI superou minhas expectativas. Sinto que meus dados estão mais seguros aqui do que no meu próprio banco. Excelente trabalho!'
+  },
+  {
+    name: 'Ricardo S.',
+    role: 'Estudante Universitário',
+    avatar: 'RS',
+    comment: 'Comecei com o plano básico para organizar minha mesada e despesas. É incrível como a plataforma é fácil de usar. Já estou planejando meu upgrade para o plano Completo!'
   }
 ];
+
 
 export default function LandingPage() {
   React.useEffect(() => {
@@ -141,6 +154,53 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Why Choose Us Section */}
+        <section className="py-20 sm:py-24 bg-muted/30">
+             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Porque escolher a FinzAI?</h2>
+                    <p className="mt-4 text-lg text-muted-foreground">
+                        Ferramentas poderosas para transformar sua relação com o dinheiro.
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <BrainCircuit className="h-7 w-7" />
+                        </div>
+                        <CardHeader className='p-0 pt-4'>
+                            <CardTitle className="text-xl">Inteligência que Guia</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 p-0 pt-2">
+                            <p className="text-muted-foreground">Nosso Consultor AI não apenas mostra números, ele os traduz em ações. Receba insights sobre seus gastos, sugestões de orçamento e recomendações de investimento alinhadas ao seu perfil.</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '200ms'}}>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <Banknote className="h-7 w-7" />
+                        </div>
+                        <CardHeader className='p-0 pt-4'>
+                            <CardTitle className="text-xl">Visão 360° do seu Dinheiro</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 p-0 pt-2">
+                           <p className="text-muted-foreground">Unifique contas, cartões de crédito e investimentos (Ações, FIIs, Renda Fixa, Cripto). Tenha uma visão completa do seu patrimônio em um dashboard simples e poderoso.</p>
+                        </CardContent>
+                    </Card>
+                     <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '400ms'}}>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <Shield className="h-7 w-7" />
+                        </div>
+                        <CardHeader className='p-0 pt-4'>
+                            <CardTitle className="text-xl">Segurança em Primeiro Lugar</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 p-0 pt-2">
+                           <p className="text-muted-foreground">Seus dados são criptografados com os mais altos padrões de segurança. Construímos nossa plataforma sobre a infraestrutura robusta do Google para garantir sua total tranquilidade.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </section>
+
         {/* Testimonials Section */}
         <section className="py-20 sm:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -150,6 +210,11 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {testimonials.map((testimonial, index) => (
                         <Card key={index} className="flex flex-col p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: `${index * 150}ms`}}>
+                            <div className="flex items-center gap-1 mb-4">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                                ))}
+                            </div>
                             <CardContent className="flex-1 p-0">
                                 <p className="text-muted-foreground">"{testimonial.comment}"</p>
                             </CardContent>
@@ -167,54 +232,6 @@ export default function LandingPage() {
                 </div>
             </div>
         </section>
-
-        {/* Why Choose Us Section */}
-        <section className="py-20 sm:py-24 bg-muted/30">
-             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
-                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Porque escolher a FinzAI?</h2>
-                    <p className="mt-4 text-lg text-muted-foreground">
-                        Ferramentas poderosas para transformar sua relação com o dinheiro.
-                    </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                            <BrainCircuit className="h-7 w-7" />
-                        </div>
-                        <CardHeader>
-                            <CardTitle className="text-xl">Inteligência que Guia</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                            <p className="text-muted-foreground">Nosso Consultor AI não apenas mostra números, ele os traduz em ações. Receba insights sobre seus gastos, sugestões de orçamento e recomendações de investimento alinhadas ao seu perfil.</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '200ms'}}>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                            <Banknote className="h-7 w-7" />
-                        </div>
-                        <CardHeader>
-                            <CardTitle className="text-xl">Visão 360° do seu Dinheiro</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                           <p className="text-muted-foreground">Unifique contas, cartões de crédito e investimentos (Ações, FIIs, Renda Fixa, Cripto). Tenha uma visão completa do seu patrimônio em um dashboard simples e poderoso, sem precisar pular entre várias plataformas.</p>
-                        </CardContent>
-                    </Card>
-                     <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '400ms'}}>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                            <Shield className="h-7 w-7" />
-                        </div>
-                        <CardHeader>
-                            <CardTitle className="text-xl">Segurança em Primeiro Lugar</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                           <p className="text-muted-foreground">Seus dados são criptografados com os mais altos padrões de segurança do mercado. Construímos nossa plataforma sobre a infraestrutura robusta e confiável do Google para garantir sua total tranquilidade.</p>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </section>
-
 
         {/* Pricing Section */}
         <section id="pricing" className="py-20 sm:py-24">
@@ -318,7 +335,7 @@ export default function LandingPage() {
         </section>
       </main>
       
-      <footer className="py-16 border-t bg-muted/30">
+      <footer className="py-16 border-t bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             <div className="flex flex-col items-center md:items-start gap-4">
                 <AppLogo />
