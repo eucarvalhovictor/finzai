@@ -226,12 +226,6 @@ export function SidebarNav() {
                           <span>Meu Perfil</span>
                         </Link>
                     </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
-                       <Link href="/profile/subscription" onClick={handleNavItemClick}>
-                          <ShoppingBag className="mr-2 h-4 w-4" />
-                          <span>Minha Assinatura</span>
-                        </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                         <LogOut className="mr-2 h-4 w-4" />
