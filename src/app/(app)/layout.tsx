@@ -11,10 +11,10 @@ import {
 } from '@/components/ui/sidebar';
 import { SidebarNav } from './_components/sidebar-nav';
 import { useUser } from '@/firebase';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NavigationProgress } from '@/components/ui/navigation-progress';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 
 export default function AppLayout({
   children,
@@ -22,8 +22,15 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const { user, isUserLoading } = useUser();
+  const router = useRouter();
 
-  if (isUserLoading) {
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="p-4 space-y-4">
@@ -36,10 +43,6 @@ export default function AppLayout({
         </div>
       </div>
     );
-  }
-
-  if (!user) {
-    redirect('/login');
   }
 
   return (

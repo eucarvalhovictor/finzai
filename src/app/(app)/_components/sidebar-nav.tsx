@@ -93,6 +93,8 @@ export function SidebarNav() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      // O redirecionamento agora é tratado pelo layout principal,
+      // mas podemos forçar aqui também para garantir uma transição imediata.
       router.push('/login');
     } catch (error) {
       console.error("Error signing out: ", error);
