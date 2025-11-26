@@ -9,7 +9,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { Transaction, Investment } from '@/lib/types';
 
 // Define the input schema, which now takes structured data
 const FinancialAnalysisInputSchema = z.object({
@@ -18,12 +17,12 @@ const FinancialAnalysisInputSchema = z.object({
           id: z.string(),
           userId: z.string(),
           creditCardId: z.string().nullable().optional(),
-          date: z.any().describe("A data da transação"),
+          date: z.string().describe("A data da transação no formato DD/MM/AAAA"),
           amount: z.number(),
           description: z.string(),
           category: z.string(),
           transactionType: z.string(),
-          paymentMethod: z.string(),
+          paymentMethod: z.string().describe("O método de pagamento, ex: 'cash', 'pix', 'card'"),
           installments: z.number().optional(),
           installmentNumber: z.number().optional(),
           originalTransactionId: z.string().optional(),
@@ -31,9 +30,9 @@ const FinancialAnalysisInputSchema = z.object({
   ).describe("Uma lista de transações financeiras do usuário."),
   investments: z.array(
       z.object({
-          name: z.string(),
-          type: z.string(),
-          value: z.number(),
+          name: z.string().describe("O nome do ativo (e.g., 'Petrobras PN')."),
+          type: z.string().describe("O tipo de ativo (e.g., 'Ação', 'FII')."),
+          value: z.number().describe("O valor total atual do ativo na carteira."),
       })
   ).describe("Uma lista dos investimentos do usuário."),
 });
@@ -88,8 +87,6 @@ const financialAnalysisFlow = ai.defineFlow(
     outputSchema: FinancialAnalysisOutputSchema,
   },
   async (input) => {
-    // Passa o input diretamente para o prompt. O `jsonStringify` no template Handlebars
-    // cuidará da conversão para string JSON.
     const {output} = await prompt(input);
     return output!;
   }
