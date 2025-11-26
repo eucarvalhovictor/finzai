@@ -57,7 +57,6 @@ export function AIConsultant() {
         name: inv.name,
         type: inv.type,
         value: inv.quantity * inv.valuePerShare,
-        changePercent: 0, // Placeholder, a IA não usa este campo atualmente
     }));
 
     // Chama a server action com os dados serializados

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useFirebase, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -26,9 +26,11 @@ const roles = ['admin', 'basico', 'completo'] as const; // readonly tuple of str
 
 
 const userSchema = z.object({
+  firstName: z.string().min(1, 'Nome é obrigatório.'),
+  lastName: z.string().min(1, 'Sobrenome é obrigatório.'),
   email: z.string().email('E-mail inválido.'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.'),
-  role: z.enum(roles, { required_error: '...' }),
+  role: z.enum(roles, { required_error: 'Selecione um cargo.' }),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
