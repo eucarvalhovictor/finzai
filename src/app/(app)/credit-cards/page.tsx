@@ -269,7 +269,7 @@ export default function CreditCardsPage() {
                 <CardContent className="grid gap-4">
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-bold">
-                      {formatCurrency(cardBalance)}
+                      {formatCurrency(Math.abs(cardBalance))}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       / {formatCurrency(card.creditLimit)}

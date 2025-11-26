@@ -18,12 +18,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatFirebaseTimestamp } from '@/lib/data';
+import { formatCurrency, formatFirebaseTimestamp, investments as mockInvestments } from '@/lib/data';
 import { DollarSign, Wallet, Landmark } from 'lucide-react';
 import { DashboardChart } from './_components/dashboard-chart';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, Investment } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type UserProfile = {
@@ -65,6 +65,9 @@ export default function DashboardPage() {
   const { data: allTransactions, isLoading: isLoadingAll } = useCollection<Transaction>(transactionsRef);
   const { data: recentTransactions, isLoading: isLoadingRecent } = useCollection<Transaction>(recentTransactionsQuery);
   
+  // Por enquanto, usaremos os investimentos mockados.
+  const investments: Investment[] = mockInvestments;
+
   const financialSummary = useMemo(() => {
     if (!allTransactions) {
       return {
@@ -76,7 +79,7 @@ export default function DashboardPage() {
       };
     }
     
-    const summary = allTransactions.reduce((acc, t) => {
+    const transactionSummary = allTransactions.reduce((acc, t) => {
         if (t.transactionType === 'income') {
             acc.income += t.amount;
         } else {
@@ -86,17 +89,18 @@ export default function DashboardPage() {
         return acc;
     }, { income: 0, expenses: 0 });
 
-    const totalBalance = summary.income + summary.expenses;
+    const totalBalance = transactionSummary.income + transactionSummary.expenses;
+    const netWorth = investments.reduce((sum, inv) => sum + inv.value, 0);
 
     return {
       totalBalance: totalBalance,
       totalDebt: 0, // Placeholder for credit card debt
-      netWorth: totalBalance, // Placeholder, will include investments later
-      monthlyIncome: summary.income,
-      monthlyExpenses: summary.expenses,
+      netWorth: netWorth,
+      monthlyIncome: transactionSummary.income,
+      monthlyExpenses: transactionSummary.expenses,
     };
 
-  }, [allTransactions]);
+  }, [allTransactions, investments]);
 
   const isLoading = isLoadingAll || isLoadingProfile;
 
@@ -140,7 +144,7 @@ export default function DashboardPage() {
                   {formatCurrency(financialSummary.netWorth)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Sua saúde financeira total
+                  Total de seus investimentos
                 </p>
               </CardContent>
             </Card>
