@@ -101,6 +101,7 @@ export default function DashboardPage() {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
+    
     const currentMonthYearStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
     
     const paidCardIdsForMonth = paidInvoices
