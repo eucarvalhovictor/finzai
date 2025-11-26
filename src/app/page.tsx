@@ -4,10 +4,12 @@ import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, BadgeCheck, TrendingUp } from 'lucide-react';
+import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, TrendingUp, Star, Instagram, Mail, BrainCircuit, Banknote, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { CookieConsentBanner } from '@/components/ui/cookie-consent-banner';
 import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 const featuresBasic = [
   'Gerencie transações',
@@ -34,9 +36,38 @@ const faqItems = [
         answer: "Sim. A segurança dos seus dados é nossa prioridade máxima. Usamos criptografia de ponta e seguimos as melhores práticas de segurança do setor para garantir que suas informações financeiras permaneçam confidenciais e protegidas."
     },
     {
+        question: "Que tipo de investimentos posso acompanhar?",
+        answer: "Nossa plataforma suporta uma vasta gama de ativos, incluindo Ações, Fundos Imobiliários (FIIs), BDRs, Renda Fixa (CDB, LCI, LCA) e as principais Criptomoedas. Você terá uma visão completa e unificada de todo o seu patrimônio."
+    },
+    {
         question: "Posso cancelar minha assinatura a qualquer momento?",
         answer: "Sim, você pode cancelar sua assinatura a qualquer momento, sem taxas ou burocracia. Você continuará com acesso aos recursos do seu plano até o final do período de faturamento atual."
+    },
+    {
+        question: "Como funciona o upgrade do plano Básico para o Completo?",
+        answer: "Você pode fazer o upgrade a qualquer momento diretamente pelo seu painel de usuário. O valor será calculado proporcionalmente e o acesso às funcionalidades do plano Completo é liberado imediatamente."
     }
+];
+
+const testimonials = [
+  {
+    name: 'Carlos M.',
+    role: 'Engenheiro de Software',
+    avatar: 'CM',
+    comment: 'O consultor de IA é simplesmente revolucionário. Finalmente entendi para onde meu dinheiro estava indo e comecei a investir com muito mais confiança. Vale cada centavo do plano Completo!'
+  },
+  {
+    name: 'Juliana P.',
+    role: 'Designer Freelancer',
+    avatar: 'JP',
+    comment: 'Como freelancer, ter todas as minhas finanças e cartões em um só lugar me poupa horas de trabalho administrativo. A interface é limpa e super intuitiva. Recomendo demais!'
+  },
+  {
+    name: 'Fernando L.',
+    role: 'Pequeno Empresário',
+    avatar: 'FL',
+    comment: 'A FinzAI transformou a maneira como eu vejo meu patrimônio. Acompanhar meus investimentos junto com as despesas me deu uma clareza que nenhuma outra plataforma ofereceu.'
+  }
 ];
 
 export default function LandingPage() {
@@ -87,6 +118,12 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="relative py-24 sm:py-32 animate-on-scroll">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="mb-6 flex justify-center animate-on-scroll">
+                <div className="inline-flex items-center gap-2 bg-muted/50 text-foreground py-2 px-4 rounded-full border">
+                    <Star className="h-5 w-5 text-primary" />
+                    <span className="font-medium text-sm">Consultor AI disponível</span>
+                </div>
+             </div>
             <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
               Sua vida financeira,{' '}
               <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
@@ -104,11 +141,38 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Testimonials Section */}
+        <section className="py-20 sm:py-24">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">O que nossos clientes dizem</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {testimonials.map((testimonial, index) => (
+                        <Card key={index} className="flex flex-col p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: `${index * 150}ms`}}>
+                            <CardContent className="flex-1 p-0">
+                                <p className="text-muted-foreground">"{testimonial.comment}"</p>
+                            </CardContent>
+                            <CardFooter className="p-0 mt-6 flex items-center gap-3">
+                                <Avatar>
+                                    <AvatarFallback>{testimonial.avatar}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-semibold">{testimonial.name}</p>
+                                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                                </div>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </section>
+
+        {/* Why Choose Us Section */}
         <section className="py-20 sm:py-24 bg-muted/30">
              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
-                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Tudo que você precisa em um só lugar</h2>
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Porque escolher a FinzAI?</h2>
                     <p className="mt-4 text-lg text-muted-foreground">
                         Ferramentas poderosas para transformar sua relação com o dinheiro.
                     </p>
@@ -116,40 +180,41 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift">
                         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                            <Bot className="h-7 w-7" />
+                            <BrainCircuit className="h-7 w-7" />
                         </div>
                         <CardHeader>
-                            <CardTitle className="text-xl">Consultor Financeiro com IA</CardTitle>
+                            <CardTitle className="text-xl">Inteligência que Guia</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1">
-                            <p className="text-muted-foreground">Receba insights e orçamentos personalizados, e entenda para onde seu dinheiro está indo. Nossa IA analisa seus padrões de gastos e investimentos para fornecer recomendações que te ajudam a economizar e a investir melhor.</p>
+                            <p className="text-muted-foreground">Nosso Consultor AI não apenas mostra números, ele os traduz em ações. Receba insights sobre seus gastos, sugestões de orçamento e recomendações de investimento alinhadas ao seu perfil.</p>
                         </CardContent>
                     </Card>
                     <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '200ms'}}>
                         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                            <CreditCard className="h-7 w-7" />
+                            <Banknote className="h-7 w-7" />
                         </div>
                         <CardHeader>
-                            <CardTitle className="text-xl">Gestão de Cartões Simplificada</CardTitle>
+                            <CardTitle className="text-xl">Visão 360° do seu Dinheiro</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1">
-                           <p className="text-muted-foreground">Visualize todas as suas faturas, limites e despesas de cartão em um único dashboard. Centralize a informação e nunca mais perca uma data de vencimento ou se surpreenda com o valor da fatura.</p>
+                           <p className="text-muted-foreground">Unifique contas, cartões de crédito e investimentos (Ações, FIIs, Renda Fixa, Cripto). Tenha uma visão completa do seu patrimônio em um dashboard simples e poderoso, sem precisar pular entre várias plataformas.</p>
                         </CardContent>
                     </Card>
                      <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '400ms'}}>
                         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                            <TrendingUp className="h-7 w-7" />
+                            <Shield className="h-7 w-7" />
                         </div>
                         <CardHeader>
-                            <CardTitle className="text-xl">Carteira de Investimentos Unificada</CardTitle>
+                            <CardTitle className="text-xl">Segurança em Primeiro Lugar</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1">
-                           <p className="text-muted-foreground">Acompanhe o desempenho de todos os seus ativos em um só lugar. Suportamos Ações, FIIs, BDRs, Renda Fixa (CDB, LCA, etc.) e Criptomoedas para que você tenha uma visão completa do seu patrimônio.</p>
+                           <p className="text-muted-foreground">Seus dados são criptografados com os mais altos padrões de segurança do mercado. Construímos nossa plataforma sobre a infraestrutura robusta e confiável do Google para garantir sua total tranquilidade.</p>
                         </CardContent>
                     </Card>
                 </div>
             </div>
         </section>
+
 
         {/* Pricing Section */}
         <section id="pricing" className="py-20 sm:py-24">
@@ -161,14 +226,14 @@ export default function LandingPage() {
               </p>
             </div>
              <div className="text-center mb-16 animate-on-scroll">
-                <div className="inline-flex items-center gap-2 bg-muted/50 text-foreground py-2 px-4 rounded-full">
+                <div className="inline-flex items-center gap-2 bg-muted/50 text-foreground py-2 px-4 rounded-full border">
                     <ShieldCheck className="h-5 w-5 text-primary" />
                     <span className="font-medium">Garantia incondicional de 7 dias.</span>
                 </div>
              </div>
             <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:max-w-4xl lg:mx-auto items-end">
               {/* Basic Plan */}
-              <Card className="flex flex-col rounded-2xl animate-on-scroll bg-card/50 hover-lift">
+              <Card className="flex flex-col rounded-2xl animate-on-scroll bg-card/50 hover-lift h-full md:h-[95%]">
                 <CardHeader className="p-8">
                   <CardTitle className="text-2xl">Básico</CardTitle>
                   <CardDescription>Para quem está começando a organizar as finanças.</CardDescription>
@@ -195,9 +260,9 @@ export default function LandingPage() {
               </Card>
 
               {/* Complete Plan */}
-              <div className="relative animate-on-scroll">
+              <div className="relative animate-on-scroll hover-lift">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                    <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold border border-primary-foreground/20">
                       <Crown className="h-4 w-4" />
                       MAIS POPULAR
                     </div>
@@ -253,8 +318,36 @@ export default function LandingPage() {
         </section>
       </main>
       
-      <footer className="py-8 border-t">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground text-sm">
+      <footer className="py-16 border-t bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div className="flex flex-col items-center md:items-start gap-4">
+                <AppLogo />
+                <p className="text-muted-foreground max-w-xs">
+                    A plataforma inteligente que centraliza suas finanças, de cartões a investimentos, com o poder da inteligência artificial para te guiar.
+                </p>
+            </div>
+            <div className="flex flex-col items-center md:items-start gap-4">
+                <h3 className="font-semibold text-lg">Contato</h3>
+                <div className="flex flex-col gap-2 text-muted-foreground">
+                    <a href="#" className="flex items-center gap-2 hover:text-primary">
+                        <Mail className="h-4 w-4"/>
+                        <span>contato@finzai.com</span>
+                    </a>
+                    <a href="#" className="flex items-center gap-2 hover:text-primary">
+                        <Instagram className="h-4 w-4"/>
+                        <span>@finz_ai</span>
+                    </a>
+                </div>
+            </div>
+            <div className="flex flex-col items-center md:items-start gap-4">
+                 <h3 className="font-semibold text-lg">Pronto para começar?</h3>
+                 <p className="text-muted-foreground">Crie sua conta e transforme sua vida financeira.</p>
+                 <Button asChild className="cta-button">
+                    <Link href="/register">Começar agora</Link>
+                 </Button>
+            </div>
+        </div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t text-center text-muted-foreground text-sm">
           © {new Date().getFullYear()} FinzAI. Todos os direitos reservados.
         </div>
       </footer>

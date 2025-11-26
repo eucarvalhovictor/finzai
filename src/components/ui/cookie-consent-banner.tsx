@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Cookie } from 'lucide-react';
 
 const COOKIE_CONSENT_KEY = 'cookie_consent_given';
 
@@ -38,8 +37,8 @@ export function CookieConsentBanner() {
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 animate-slide-up-and-fade">
       <Card className="max-w-xl mx-auto shadow-2xl">
           <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0 mt-1">
-                <Cookie className="h-6 w-6 text-primary" />
+             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0 mt-1 text-2xl">
+                <span>🍪</span>
              </div>
              <div className="grid gap-1.5">
                 <CardTitle>Nós usamos cookies</CardTitle>
