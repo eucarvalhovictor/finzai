@@ -92,8 +92,23 @@ export default function DashboardPage() {
         return acc;
     }, { income: 0, expenses: 0 });
     
+    // Correctly calculate the debt for the current month's credit card bill
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
     const totalDebt = allTransactions
-        .filter(t => t.paymentMethod === 'card' && t.transactionType === 'expense')
+        .filter(t => {
+            if (t.paymentMethod !== 'card' || t.transactionType !== 'expense') {
+                return false;
+            }
+            // Ensure t.date is valid and can be converted to a Date object
+            if (t.date && typeof t.date.toDate === 'function') {
+                const transactionDate = t.date.toDate();
+                return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            }
+            return false;
+        })
         .reduce((sum, t) => sum + t.amount, 0);
 
 
@@ -102,7 +117,7 @@ export default function DashboardPage() {
 
     return {
       totalBalance: totalBalance,
-      totalDebt: totalDebt, // Display as a positive number
+      totalDebt: totalDebt, // This will be a negative number, use Math.abs() for display
       netWorth: netWorth,
       monthlyIncome: transactionSummary.income,
       monthlyExpenses: transactionSummary.expenses,
@@ -181,7 +196,7 @@ export default function DashboardPage() {
                   {formatCurrency(Math.abs(financialSummary.totalDebt))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Valor estimado da próxima fatura
+                  Valor estimado da fatura deste mês
                 </p>
               </CardContent>
             </Card>
