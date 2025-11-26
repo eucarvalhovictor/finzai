@@ -92,11 +92,11 @@
   }
 
   .cta-button {
-    @apply bg-gradient-to-r from-primary to-primary/70 text-primary-foreground;
+    @apply bg-gradient-to-r from-primary to-primary/70 text-primary-foreground shadow-[0_0_15px_hsl(var(--primary)/0.5)] transition-all;
   }
   
   .cta-button:hover {
-    @apply shadow-lg shadow-primary/20;
+    @apply shadow-[0_0_30px_hsl(var(--primary)/0.7)];
   }
 
   .animate-on-scroll {
