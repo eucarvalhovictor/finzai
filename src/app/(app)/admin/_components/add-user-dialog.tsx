@@ -22,14 +22,13 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { UserRole } from '@/lib/types';
 
-const roles: UserRole[] = ['basico', 'completo', 'admin'];
+const roles = ['admin', 'basico', 'completo'] as const; // readonly tuple of string literals
+
 
 const userSchema = z.object({
-  firstName: z.string().min(1, 'Nome é obrigatório.'),
-  lastName: z.string().min(1, 'Sobrenome é obrigatório.'),
   email: z.string().email('E-mail inválido.'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.'),
-  role: z.enum(roles, { required_error: 'Selecione um cargo.' }),
+  role: z.enum(roles, { required_error: '...' }),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
