@@ -104,14 +104,20 @@ export default function DashboardPage() {
 
     const totalDebt = allTransactions
         .filter(t => {
-            if (t.paymentMethod !== 'card' || t.transactionType !== 'expense' || (t.creditCardId && paidCardIdsForMonth.includes(t.creditCardId))) {
+            if (t.transactionType !== 'expense' || t.paymentMethod !== 'card') return false;
+
+            const transactionDate = t.date?.toDate();
+            if (!transactionDate) return false;
+            
+            const isCurrentMonth = transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            if (!isCurrentMonth) return false;
+
+            // Exclude if the invoice for this card is already paid this month
+            if (t.creditCardId && paidCardIdsForMonth.includes(t.creditCardId)) {
                 return false;
             }
-            if (t.date && typeof t.date.toDate === 'function') {
-                const transactionDate = t.date.toDate();
-                return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
-            }
-            return false;
+            
+            return true;
         })
         .reduce((sum, t) => sum + t.amount, 0);
 
