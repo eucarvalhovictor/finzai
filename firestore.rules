@@ -181,5 +181,20 @@ service cloud.firestore {
         allow delete: if isExistingOwner(userId);
       }
     }
+
+    // -------------------------------------------------------------------------
+    // Global Settings (/settings)
+    // -------------------------------------------------------------------------
+    
+    /**
+     * @description Manages global application settings, like SEO.
+     * @allow (read) Anyone can read the settings.
+     * @allow (write) Only admins can write/update the settings.
+     */
+    match /settings/{settingId} {
+      allow get: if true;
+      allow list: if true;
+      allow write: if isAdmin();
+    }
   }
 }

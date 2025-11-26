@@ -2,11 +2,41 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase/config';
+import type { SeoSettings } from '@/lib/types';
 
-export const metadata: Metadata = {
-  title: 'FinzAI',
-  description: 'Your personal finance dashboard.',
-};
+// Initialize Firebase for server-side usage (e.g., in generateMetadata)
+const serverApp = initializeFirebase();
+const db = getFirestore(serverApp);
+
+// This function is run on the server to generate metadata for the page
+export async function generateMetadata(): Promise<Metadata> {
+  // Define default values
+  let siteTitle = 'FinzAI';
+  let siteDescription = 'Your personal finance dashboard.';
+
+  try {
+    const seoSettingsRef = doc(db, 'settings', 'globalSeo');
+    const seoSettingsSnap = await getDoc(seoSettingsRef);
+
+    if (seoSettingsSnap.exists()) {
+      const settings = seoSettingsSnap.data() as SeoSettings;
+      siteTitle = settings.siteTitle || siteTitle;
+      siteDescription = settings.defaultDescription || siteDescription;
+    }
+  } catch (error) {
+    // If there's an error fetching (e.g., Firestore not ready, permissions),
+    // fall back to the default values.
+    console.error("Could not fetch SEO settings for metadata:", error);
+  }
+
+  return {
+    title: siteTitle,
+    description: siteDescription,
+  };
+}
+
 
 export default function RootLayout({
   children,

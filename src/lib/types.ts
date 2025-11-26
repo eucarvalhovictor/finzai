@@ -56,4 +56,8 @@ export type UserProfile = {
   photoURL?: string;
 };
 
-    
+export type SeoSettings = {
+  id: string;
+  siteTitle: string;
+  defaultDescription: string;
+};
