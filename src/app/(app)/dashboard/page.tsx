@@ -91,13 +91,18 @@ export default function DashboardPage() {
         }
         return acc;
     }, { income: 0, expenses: 0 });
+    
+    const totalDebt = allTransactions
+        .filter(t => t.paymentMethod === 'card' && t.transactionType === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
 
     const totalBalance = transactionSummary.income + transactionSummary.expenses;
     const netWorth = investments?.reduce((sum, inv) => sum + (inv.quantity * inv.valuePerShare), 0) || 0;
 
     return {
       totalBalance: totalBalance,
-      totalDebt: 0, // Placeholder for credit card debt
+      totalDebt: totalDebt, // Display as a positive number
       netWorth: netWorth,
       monthlyIncome: transactionSummary.income,
       monthlyExpenses: transactionSummary.expenses,
@@ -173,7 +178,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-destructive sm:text-2xl">
-                  {formatCurrency(financialSummary.totalDebt)}
+                  {formatCurrency(Math.abs(financialSummary.totalDebt))}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Saldos de cartão de crédito

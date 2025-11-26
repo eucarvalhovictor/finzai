@@ -9,9 +9,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useFirebase, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, doc, writeBatch } from 'firebase/firestore';
 import type { CreditCard } from '@/lib/types';
 import { serverTimestamp } from 'firebase/firestore';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const transactionCategories = [
   'Moradia',
@@ -31,6 +37,8 @@ const transactionSchema = z.object({
   category: z.string().optional(),
   paymentMethod: z.enum(['cash', 'pix', 'card'], { required_error: 'Selecione o método.' }),
   creditCardId: z.string().optional(),
+  installments: z.coerce.number().int().min(1).optional().default(1),
+  firstInstallmentDate: z.date().optional(),
 }).refine(data => {
   if (data.paymentMethod === 'card') {
     return !!data.creditCardId;
@@ -48,6 +56,15 @@ const transactionSchema = z.object({
 }, {
     message: 'Selecione uma categoria.',
     path: ['category'],
+}).refine(data => {
+  // A data da primeira parcela é obrigatória se houver mais de uma parcela
+  if (data.transactionType === 'expense' && data.paymentMethod === 'card' && data.installments > 1) {
+    return !!data.firstInstallmentDate;
+  }
+  return true;
+}, {
+  message: 'Selecione a data da primeira parcela.',
+  path: ['firstInstallmentDate'],
 });
 
 
@@ -73,11 +90,13 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
       amount: 0,
       transactionType: 'expense',
       paymentMethod: 'cash',
+      installments: 1,
     },
   });
 
   const paymentMethod = form.watch('paymentMethod');
   const transactionType = form.watch('transactionType');
+  const installments = form.watch('installments');
   
   async function onSubmit(data: TransactionFormValues) {
     if (!firestore || !user) {
@@ -85,20 +104,49 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
         return;
     }
 
-    const transactionsCollection = collection(firestore, `users/${user.uid}/transactions`);
+    const transactionsCollectionRef = collection(firestore, `users/${user.uid}/transactions`);
+    
+    if (data.transactionType === 'expense' && data.paymentMethod === 'card' && data.installments > 1 && data.firstInstallmentDate) {
+        const batch = writeBatch(firestore);
+        const originalTransactionId = doc(collection(firestore, 'temp')).id; // Gere um ID único para o grupo de parcelas
+        const installmentAmount = data.amount / data.installments;
 
-    const newTransactionData = {
-        userId: user.uid,
-        description: data.description,
-        amount: data.transactionType === 'income' ? data.amount : -data.amount,
-        category: data.transactionType === 'income' ? 'Renda' : data.category,
-        transactionType: data.transactionType,
-        paymentMethod: data.paymentMethod,
-        creditCardId: data.creditCardId || null,
-        date: serverTimestamp(),
-    };
+        for (let i = 0; i < data.installments; i++) {
+            const installmentDate = new Date(data.firstInstallmentDate);
+            installmentDate.setMonth(installmentDate.getMonth() + i);
 
-    addDocumentNonBlocking(transactionsCollection, newTransactionData);
+            const newDocRef = doc(transactionsCollectionRef);
+            batch.set(newDocRef, {
+                userId: user.uid,
+                description: `${data.description} (${i + 1}/${data.installments})`,
+                amount: -installmentAmount, // Despesas são negativas
+                category: data.category,
+                transactionType: 'expense',
+                paymentMethod: 'card',
+                creditCardId: data.creditCardId || null,
+                date: installmentDate,
+                installments: data.installments,
+                installmentNumber: i + 1,
+                originalTransactionId: originalTransactionId,
+            });
+        }
+        await batch.commit();
+
+    } else {
+        const newTransactionData = {
+            userId: user.uid,
+            description: data.description,
+            amount: data.transactionType === 'income' ? data.amount : -data.amount,
+            category: data.transactionType === 'income' ? 'Renda' : data.category,
+            transactionType: data.transactionType,
+            paymentMethod: data.paymentMethod,
+            creditCardId: data.creditCardId || null,
+            date: serverTimestamp(),
+            installments: 1,
+            installmentNumber: 1,
+        };
+        addDocumentNonBlocking(transactionsCollectionRef, newTransactionData);
+    }
 
     form.reset();
     onTransactionSaved();
@@ -156,7 +204,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
             name="amount"
             render={({ field }) => (
             <FormItem>
-                <FormLabel>Valor</FormLabel>
+                <FormLabel>Valor Total</FormLabel>
                 <FormControl>
                 <Input type="number" step="0.01" placeholder="Ex: 5.50" {...field} />
                 </FormControl>
@@ -224,6 +272,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
         />
 
         {paymentMethod === 'card' && (
+          <>
             <FormField
             control={form.control}
             name="creditCardId"
@@ -248,6 +297,68 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
                 </FormItem>
             )}
             />
+            {transactionType === 'expense' && (
+              <>
+                 <FormField
+                  control={form.control}
+                  name="installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número de Parcelas</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={1} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {installments > 1 && (
+                   <FormField
+                      control={form.control}
+                      name="firstInstallmentDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Data da Primeira Parcela</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP", { locale: ptBR })
+                                  ) : (
+                                    <span>Escolha uma data</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date < new Date(new Date().setHours(0,0,0,0))
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                )}
+              </>
+            )}
+          </>
         )}
         <div className="pt-4">
           <Button type="submit" className="w-full">Salvar Transação</Button>

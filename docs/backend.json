@@ -147,7 +147,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Transaction",
       "type": "object",
-      "description": "Represents a financial transaction.",
+      "description": "Represents a financial transaction, including installments.",
       "properties": {
         "id": {
           "type": "string",
@@ -163,12 +163,12 @@
         },
         "date": {
           "type": "string",
-          "description": "The date of the transaction.",
+          "description": "The date of the transaction or installment.",
           "format": "date-time"
         },
         "amount": {
           "type": "number",
-          "description": "The amount of the transaction."
+          "description": "The amount of the transaction or installment."
         },
         "description": {
           "type": "string",
@@ -181,6 +181,18 @@
         "transactionType": {
           "type": "string",
           "description": "The type of transaction. Can be income or expense."
+        },
+        "installments": {
+          "type": "integer",
+          "description": "Total number of installments for the purchase. Defaults to 1."
+        },
+        "installmentNumber": {
+          "type": "integer",
+          "description": "The number of the current installment (e.g., 1, 2, 3). Defaults to 1."
+        },
+        "originalTransactionId": {
+          "type": "string",
+          "description": "A unique ID to group all installments of a single purchase. Null for single-payment transactions."
         }
       },
       "required": [
@@ -238,7 +250,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "SeoSettings",
       "type": "object",
-      "description": "Represents global SEO settings for the application.",
+      "description": "Represents global SEO and site settings for the application.",
       "properties": {
         "id": {
           "type": "string",
@@ -251,6 +263,11 @@
         "defaultDescription": {
           "type": "string",
           "description": "The default meta description for the website."
+        },
+        "faviconUrl": {
+          "type": "string",
+          "description": "URL of the site's favicon, can be a data URI.",
+          "format": "uri"
         }
       },
       "required": ["id", "siteTitle", "defaultDescription"]

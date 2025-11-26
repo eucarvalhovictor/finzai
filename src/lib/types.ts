@@ -10,6 +10,9 @@ export type Transaction = {
   userId: string;
   paymentMethod: 'cash' | 'pix' | 'card';
   creditCardId?: string | null;
+  installments?: number; // Total number of installments
+  installmentNumber?: number; // The number of the current installment (e.g., 1, 2, 3)
+  originalTransactionId?: string; // An ID to group all installments of a single purchase
 };
 
 export type CreditCard = {
@@ -60,4 +63,5 @@ export type SeoSettings = {
   id: string;
   siteTitle: string;
   defaultDescription: string;
+  faviconUrl?: string;
 };
