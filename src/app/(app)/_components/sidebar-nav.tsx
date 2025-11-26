@@ -7,6 +7,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarSeparator,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -70,6 +71,7 @@ export function SidebarNav() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const isMobile = useIsMobile();
   const [hasMounted, setHasMounted] = useState(false);
+  const { setOpenMobile } = useSidebar();
 
   const { auth, user, firestore } = useFirebase();
   const router = useRouter();
@@ -94,6 +96,12 @@ export function SidebarNav() {
       router.push('/login');
     } catch (error) {
       console.error("Error signing out: ", error);
+    }
+  };
+  
+  const handleNavItemClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
     }
   };
 
@@ -136,7 +144,7 @@ export function SidebarNav() {
           <SheetTrigger asChild>
             {AddTransactionButton}
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-full w-full p-0">
+          <SheetContent className="h-full w-full p-0">
              <ScrollArea className="h-full">
                 <div className="p-6">
                     <SheetHeader>
@@ -175,7 +183,7 @@ export function SidebarNav() {
           {filteredNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={item.label}>
-                <Link href={item.href}>
+                <Link href={item.href} onClick={handleNavItemClick}>
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
@@ -207,7 +215,7 @@ export function SidebarNav() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
                     <DropdownMenuItem asChild>
-                       <Link href="/profile">
+                       <Link href="/profile" onClick={handleNavItemClick}>
                           <UserCircle className="mr-2 h-4 w-4" />
                           <span>Meu Perfil</span>
                         </Link>
