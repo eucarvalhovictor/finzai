@@ -37,6 +37,7 @@ import type { Transaction } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TransactionForm } from '../_components/transaction-form';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 function TransactionsTable({ transactions, isLoading }: { transactions: Transaction[] | null, isLoading: boolean }) {
@@ -136,14 +137,18 @@ export default function TransactionsPage() {
           <SheetTrigger asChild>
             {AddTransactionButton}
           </SheetTrigger>
-          <SheetContent side="bottom" className="mx-auto rounded-t-lg">
-            <SheetHeader>
-              <SheetTitle>Adicionar Nova Transação</SheetTitle>
-              <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
-            </SheetHeader>
-            <div className="py-4">
-              <TransactionForm onTransactionSaved={handleTransactionSaved} />
-            </div>
+          <SheetContent side="bottom" className="h-full w-full p-0">
+             <ScrollArea className="h-full">
+                <div className="p-6">
+                    <SheetHeader>
+                        <SheetTitle>Adicionar Nova Transação</SheetTitle>
+                        <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
+                    </SheetHeader>
+                    <div className="py-4">
+                        <TransactionForm onTransactionSaved={handleTransactionSaved} />
+                    </div>
+                </div>
+            </ScrollArea>
           </SheetContent>
         </Sheet>
       );
@@ -153,7 +158,7 @@ export default function TransactionsPage() {
         <DialogTrigger asChild>
           {AddTransactionButton}
         </DialogTrigger>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar Nova Transação</DialogTitle>
             <DialogDescription>Preencha os detalhes da sua nova transação.</DialogDescription>
