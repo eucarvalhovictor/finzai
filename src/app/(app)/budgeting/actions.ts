@@ -2,7 +2,7 @@
 
 import { getFinancialAnalysis } from '@/ai/flows/ai-powered-budget-suggestions';
 import { z } from 'zod';
-import type { Transaction, Investment } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 
 
 export type AnalysisState = {
@@ -12,9 +12,16 @@ export type AnalysisState = {
   isSuccess: boolean;
 };
 
+// Custom type for the investment data that the AI expects.
+type InvestmentForAI = {
+  name: string;
+  type: string;
+  value: number;
+}
+
 export async function generateFinancialAnalysis(
   prevState: AnalysisState,
-  { transactions, investments }: { transactions: Transaction[], investments: Investment[] }
+  { transactions, investments }: { transactions: Transaction[], investments: InvestmentForAI[] }
 ): Promise<AnalysisState> {
   
   if (!transactions || transactions.length < 10) {
@@ -36,9 +43,11 @@ export async function generateFinancialAnalysis(
     };
   } catch (error) {
     console.error("Error generating analysis:", error);
+    // Try to extract a more useful message if available
+    const errorMessage = (error instanceof Error && error.cause) ? (error.cause as Error).message : (error as Error).message;
     return {
       isSuccess: false,
-      message: 'Ocorreu um erro inesperado ao gerar a análise.',
+      message: `Ocorreu um erro inesperado ao gerar a análise: ${errorMessage}`,
     };
   }
 }

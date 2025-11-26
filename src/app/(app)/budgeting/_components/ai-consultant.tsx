@@ -11,6 +11,7 @@ import { collection } from 'firebase/firestore';
 import type { Transaction, Investment } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useState } from 'react';
+import { formatFirebaseTimestamp } from '@/lib/data';
 
 const initialState: AnalysisState = {
   message: '',
@@ -44,6 +45,12 @@ export function AIConsultant() {
     
     // Inicia a transição de estado pendente
     setIsPending(true);
+
+    // FIX: Convert Firestore Timestamps to serializable strings before sending to the server action.
+    const serializableTransactions = transactions.map(t => ({
+        ...t,
+        date: formatFirebaseTimestamp(t.date),
+    }));
     
     // Mapeia os investimentos para o formato esperado pela IA
     const analysisInvestments = investments.map(inv => ({
@@ -53,8 +60,8 @@ export function AIConsultant() {
         changePercent: 0, // Placeholder, a IA não usa este campo atualmente
     }));
 
-    // Chama a server action com os dados
-    await formAction({ transactions, investments: analysisInvestments });
+    // Chama a server action com os dados serializados
+    await formAction({ transactions: serializableTransactions, investments: analysisInvestments });
 
     // Finaliza a transição de estado pendente
     setIsPending(false);

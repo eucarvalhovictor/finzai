@@ -15,11 +15,18 @@ import type { Transaction, Investment } from '@/lib/types';
 const FinancialAnalysisInputSchema = z.object({
   transactions: z.array(
       z.object({
-          description: z.string(),
-          amount: z.number(),
-          category: z.string(),
-          transactionType: z.enum(['income', 'expense']),
+          id: z.string(),
+          userId: z.string(),
+          creditCardId: z.string().nullable().optional(),
           date: z.any().describe("A data da transação"),
+          amount: z.number(),
+          description: z.string(),
+          category: z.string(),
+          transactionType: z.string(),
+          paymentMethod: z.string(),
+          installments: z.number().optional(),
+          installmentNumber: z.number().optional(),
+          originalTransactionId: z.string().optional(),
       })
   ).describe("Uma lista de transações financeiras do usuário."),
   investments: z.array(
@@ -27,7 +34,6 @@ const FinancialAnalysisInputSchema = z.object({
           name: z.string(),
           type: z.string(),
           value: z.number(),
-          changePercent: z.number(),
       })
   ).describe("Uma lista dos investimentos do usuário."),
 });
@@ -82,20 +88,9 @@ const financialAnalysisFlow = ai.defineFlow(
     outputSchema: FinancialAnalysisOutputSchema,
   },
   async (input) => {
-    // A função `jsonStringify` não está disponível no prompt, então stringificamos aqui
-    const promptInput = {
-        transactions: JSON.stringify(input.transactions, null, 2),
-        investments: JSON.stringify(input.investments, null, 2),
-    };
-  
-    // O prompt espera um objeto com as propriedades `transactions` e `investments`
-    const adjustedInputForPrompt = {
-        ...promptInput,
-        // Passamos os dados originais para validação de schema, mas o prompt usará as versões stringified
-        ...input
-    };
-
-    const {output} = await prompt(adjustedInputForPrompt);
+    // Passa o input diretamente para o prompt. O `jsonStringify` no template Handlebars
+    // cuidará da conversão para string JSON.
+    const {output} = await prompt(input);
     return output!;
   }
 );
