@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // Define default values
   let siteTitle = 'FinzAI';
   let siteDescription = 'Your personal finance dashboard.';
+  let faviconUrl: string | undefined = undefined;
 
   try {
     const seoSettingsRef = doc(db, 'settings', 'globalSeo');
@@ -25,6 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
       const settings = seoSettingsSnap.data() as SeoSettings;
       siteTitle = settings.siteTitle || siteTitle;
       siteDescription = settings.defaultDescription || siteDescription;
+      faviconUrl = settings.faviconUrl || undefined;
     }
   } catch (error) {
     // If there's an error fetching (e.g., Firestore not ready, permissions),
@@ -35,6 +37,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: siteTitle,
     description: siteDescription,
+    icons: {
+      icon: faviconUrl,
+    },
   };
 }
 
