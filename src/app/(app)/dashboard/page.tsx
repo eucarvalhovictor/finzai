@@ -129,7 +129,7 @@ export default function DashboardPage() {
         title={pageTitle}
         description="Aqui está um resumo do seu status financeiro atual."
       />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
           <>
             <CardSkeleton />
