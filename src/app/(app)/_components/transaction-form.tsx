@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const transactionCategories = [
   'Moradia',
@@ -37,7 +37,7 @@ const transactionSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.coerce.number().positive('O valor deve ser um número positivo'),
   transactionType: z.enum(['income', 'expense'], { required_error: 'Selecione o tipo.' }),
-  category: z.string().optional(),
+  category: z.string(), // Tornando a categoria não-opcional no schema base
   paymentMethod: z.enum(['cash', 'pix', 'card'], { required_error: 'Selecione o método.' }),
   creditCardId: z.string().optional(),
   installments: z.coerce.number().int().min(1).optional().default(1),
@@ -61,7 +61,7 @@ const transactionSchema = z.object({
     path: ['category'],
 }).refine(data => {
   // A data da primeira parcela é obrigatória se houver mais de uma parcela
-  if (data.transactionType === 'expense' && data.paymentMethod === 'card' && data.installments > 1) {
+  if (data.transactionType === 'expense' && data.paymentMethod === 'card' && (data.installments ?? 1) > 1) {
     return !!data.firstInstallmentDate;
   }
   return true;
@@ -82,6 +82,12 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
   const isMobile = useIsMobile();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [today] = useState(new Date());
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
 
   const creditCardsRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -97,6 +103,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
       transactionType: 'expense',
       paymentMethod: 'cash',
       installments: 1,
+      category: '',
     },
   });
 
@@ -112,7 +119,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
 
     const transactionsCollectionRef = collection(firestore, `users/${user.uid}/transactions`);
     
-    if (data.transactionType === 'expense' && data.paymentMethod === 'card' && data.installments > 1 && data.firstInstallmentDate) {
+    if (data.transactionType === 'expense' && data.paymentMethod === 'card' && data.installments && data.installments > 1 && data.firstInstallmentDate) {
         const batch = writeBatch(firestore);
         const originalTransactionId = doc(collection(firestore, 'temp')).id; // Gere um ID único para o grupo de parcelas
         const installmentAmount = data.amount / data.installments;
@@ -187,6 +194,10 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
       initialFocus
     />
   );
+
+  if (!hasMounted) {
+    return null; // ou um esqueleto de carregamento
+  }
 
   return (
     <Form {...form}>
@@ -349,7 +360,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
                   )}
                 />
 
-                {installments > 1 && (
+                {installments && installments > 1 && (
                    <FormField
                       control={form.control}
                       name="firstInstallmentDate"
@@ -395,5 +406,3 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
     </Form>
   );
 }
-
-    
