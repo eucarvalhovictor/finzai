@@ -13,6 +13,8 @@ import { SidebarNav } from './_components/sidebar-nav';
 import { useUser } from '@/firebase';
 import { redirect } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { NavigationProgress } from '@/components/ui/navigation-progress';
+import { Suspense } from 'react';
 
 export default function AppLayout({
   children,
@@ -42,6 +44,9 @@ export default function AppLayout({
 
   return (
     <SidebarProvider>
+      <Suspense>
+        <NavigationProgress />
+      </Suspense>
       <Sidebar collapsible="icon">
         <SidebarHeader className="flex justify-center p-2">
           <SidebarTrigger />
