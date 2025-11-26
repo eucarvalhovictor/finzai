@@ -84,6 +84,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   .auth-layout {
     @apply h-full min-h-[100svh] overflow-y-hidden;
   }
@@ -105,6 +108,12 @@
   .animate-on-scroll.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+  .hover-lift {
+    @apply transition-transform duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    @apply -translate-y-2;
   }
 }
 

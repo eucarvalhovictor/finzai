@@ -4,7 +4,7 @@ import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Check, Bot, CreditCard, ShieldCheck } from 'lucide-react';
+import { Check, Bot, CreditCard, ShieldCheck, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { CookieConsentBanner } from '@/components/ui/cookie-consent-banner';
 import React from 'react';
@@ -58,6 +58,11 @@ export default function LandingPage() {
 
     return () => sections.forEach(section => observer.unobserve(section));
   }, []);
+  
+  const handleScrollToPricing = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div className="flex flex-col min-h-svh bg-background text-foreground">
@@ -66,10 +71,10 @@ export default function LandingPage() {
           <AppLogo />
           <nav className="flex items-center gap-2 sm:gap-4">
             <Button variant="ghost" asChild>
-              <Link href="/login">Login</Link>
+              <a href="#pricing" onClick={handleScrollToPricing}>Planos</a>
             </Button>
             <Button asChild>
-              <Link href="/register">Registrar Grátis</Link>
+              <Link href="/login">Área de Membros</Link>
             </Button>
           </nav>
         </div>
@@ -105,28 +110,28 @@ export default function LandingPage() {
                         Ferramentas poderosas para transformar sua relação com o dinheiro.
                     </p>
                 </div>
-                <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
-                    <div className="flex flex-col items-center text-center animate-on-scroll">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                    <Card className="flex flex-col items-center text-center p-8 animate-on-scroll bg-card/50 hover-lift">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <Bot className="h-6 w-6" />
                         </div>
                         <h3 className="mt-6 text-xl font-bold">Consultor AI</h3>
                         <p className="mt-2 text-muted-foreground">Receba insights e sugestões personalizadas para otimizar seus gastos e investimentos. (Plano Completo)</p>
-                    </div>
-                     <div className="flex flex-col items-center text-center animate-on-scroll" style={{animationDelay: '200ms'}}>
+                    </Card>
+                     <Card className="flex flex-col items-center text-center p-8 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '200ms'}}>
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <CreditCard className="h-6 w-6" />
                         </div>
                         <h3 className="mt-6 text-xl font-bold">Gestão de Cartões</h3>
                         <p className="mt-2 text-muted-foreground">Visualize todas as suas faturas, limites e despesas de cartão de crédito em um único dashboard.</p>
-                    </div>
-                     <div className="flex flex-col items-center text-center animate-on-scroll" style={{animationDelay: '400ms'}}>
+                    </Card>
+                     <Card className="flex flex-col items-center text-center p-8 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '400ms'}}>
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <ShieldCheck className="h-6 w-6" />
                         </div>
                         <h3 className="mt-6 text-xl font-bold">Segurança Avançada</h3>
                         <p className="mt-2 text-muted-foreground">Seus dados são protegidos com criptografia de ponta, garantindo total privacidade e segurança.</p>
-                    </div>
+                    </Card>
                 </div>
             </div>
         </section>
@@ -142,7 +147,7 @@ export default function LandingPage() {
             </div>
             <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:max-w-4xl lg:mx-auto">
               {/* Basic Plan */}
-              <Card className="flex flex-col rounded-2xl animate-on-scroll">
+              <Card className="flex flex-col rounded-2xl animate-on-scroll bg-card/50 hover-lift">
                 <CardHeader className="p-8">
                   <CardTitle className="text-2xl">Básico</CardTitle>
                   <CardDescription>Para quem está começando a organizar as finanças.</CardDescription>
@@ -169,31 +174,39 @@ export default function LandingPage() {
               </Card>
 
               {/* Complete Plan */}
-              <Card className="flex flex-col rounded-2xl border-2 border-primary shadow-2xl shadow-primary/10 animate-on-scroll">
-                 <CardHeader className="p-8">
-                  <CardTitle className="text-2xl">Completo</CardTitle>
-                  <CardDescription>Para investidores e quem busca otimização máxima.</CardDescription>
-                  <div className="pt-4">
-                    <span className="text-4xl font-bold">R$39</span>
-                    <span className="text-muted-foreground">,90/mês</span>
+              <div className="relative animate-on-scroll">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                      <Crown className="h-4 w-4" />
+                      MAIS POPULAR
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent className="flex-1 p-8 pt-0">
-                  <ul className="space-y-4">
-                    {featuresComplete.map(feature => (
-                      <li key={feature} className="flex items-center gap-3">
-                        <Check className="h-5 w-5 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter className="p-8">
-                   <Button className="w-full cta-button" asChild>
-                     <Link href="/register">Assinar o Completo</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+                  <Card className="flex flex-col rounded-2xl border-2 border-primary shadow-2xl shadow-primary/10 bg-card/80 hover-lift h-full">
+                    <CardHeader className="p-8">
+                      <CardTitle className="text-2xl">Completo</CardTitle>
+                      <CardDescription>Para investidores e quem busca otimização máxima.</CardDescription>
+                      <div className="pt-4">
+                        <span className="text-4xl font-bold">R$39</span>
+                        <span className="text-muted-foreground">,90/mês</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 p-8 pt-0">
+                      <ul className="space-y-4">
+                        {featuresComplete.map(feature => (
+                          <li key={feature} className="flex items-center gap-3">
+                            <Check className="h-5 w-5 text-primary shrink-0" />
+                            <span className="text-muted-foreground">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                    <CardFooter className="p-8">
+                      <Button className="w-full cta-button" asChild>
+                        <Link href="/register">Assinar o Completo</Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+              </div>
             </div>
           </div>
         </section>
