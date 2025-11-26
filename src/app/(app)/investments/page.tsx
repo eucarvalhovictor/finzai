@@ -35,6 +35,8 @@ import { AddInvestmentDialog } from './_components/add-investment-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const chartConfig = {
   value: {
@@ -147,7 +149,7 @@ export default function InvestmentsPage() {
                  <CardHeader>
                     <CardTitle>Alocação de Ativos</CardTitle>
                  </CardHeader>
-                 <CardContent className="flex items-center justify-center gap-8">
+                 <CardContent className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-8">
                      {isLoading ? <Skeleton className="h-[150px] w-[150px] rounded-full" /> : 
                      investments && investments.length > 0 ? (
                       <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[150px]">
@@ -173,11 +175,11 @@ export default function InvestmentsPage() {
                         </PieChart>
                       </ChartContainer>
                     ) : <div className="h-[150px] flex items-center justify-center"><p className="text-muted-foreground">Sem dados para exibir.</p></div>}
-                    <div className="grid gap-2 text-sm">
+                    <div className="grid w-full gap-2 text-sm sm:w-auto">
                         {assetAllocation.map(item => (
                             <div key={item.type} className="flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full" style={{backgroundColor: chartConfig[item.type as keyof typeof chartConfig]?.color}}></span>
-                                <span>{item.type}</span>
+                                <span className="flex-1">{item.type}</span>
                                 <span className="ml-auto font-medium">{formatCurrency(item.value)}</span>
                             </div>
                         ))}
@@ -195,48 +197,93 @@ export default function InvestmentsPage() {
                         <CardTitle>{brokerage}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>Ativo</TableHead>
-                                    <TableHead>Tipo</TableHead>
-                                    <TableHead className="text-right">Cotas</TableHead>
-                                    <TableHead className="text-right">Valor / Cota</TableHead>
-                                    <TableHead className="text-right">Posição Total</TableHead>
-                                    <TableHead className="w-[50px] text-right">Ações</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {investmentsByBrokerage.get(brokerage)?.map(inv => (
-                                    <TableRow key={inv.id}>
-                                        <TableCell>
-                                            <div className="font-medium">{inv.name}</div>
-                                            <div className="text-xs text-muted-foreground">{inv.ticker}</div>
-                                        </TableCell>
-                                        <TableCell>{inv.type}</TableCell>
-                                        <TableCell className="text-right">{inv.quantity}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(inv.valuePerShare)}</TableCell>
-                                        <TableCell className="text-right font-bold">{formatCurrency(inv.quantity * inv.valuePerShare)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                        <span className="sr-only">Ações do ativo</span>
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onSelect={() => setInvestmentToDelete(inv)} className="text-destructive">
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Excluir
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                        {/* Desktop Table */}
+                        <div className="hidden md:block">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Ativo</TableHead>
+                                        <TableHead>Tipo</TableHead>
+                                        <TableHead className="text-right">Cotas</TableHead>
+                                        <TableHead className="text-right">Valor / Cota</TableHead>
+                                        <TableHead className="text-right">Posição Total</TableHead>
+                                        <TableHead className="w-[50px] text-right">Ações</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {investmentsByBrokerage.get(brokerage)?.map(inv => (
+                                        <TableRow key={inv.id}>
+                                            <TableCell>
+                                                <div className="font-medium">{inv.name}</div>
+                                                <div className="text-xs text-muted-foreground">{inv.ticker}</div>
+                                            </TableCell>
+                                            <TableCell><Badge variant="outline">{inv.type}</Badge></TableCell>
+                                            <TableCell className="text-right">{inv.quantity}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(inv.valuePerShare)}</TableCell>
+                                            <TableCell className="text-right font-bold">{formatCurrency(inv.quantity * inv.valuePerShare)}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                            <span className="sr-only">Ações do ativo</span>
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onSelect={() => setInvestmentToDelete(inv)} className="text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Excluir
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        {/* Mobile Card List */}
+                        <div className="grid gap-4 md:hidden">
+                            {investmentsByBrokerage.get(brokerage)?.map(inv => (
+                                <div key={inv.id} className="rounded-lg border bg-card text-card-foreground p-4">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-bold">{inv.name} ({inv.ticker})</div>
+                                            <div className="text-sm text-muted-foreground"><Badge variant="outline" className="mt-1">{inv.type}</Badge></div>
+                                        </div>
+                                         <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                    <span className="sr-only">Ações do ativo</span>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onSelect={() => setInvestmentToDelete(inv)} className="text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Excluir
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                    <Separator className="my-3" />
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                        <div>
+                                            <div className="text-muted-foreground">Posição Total</div>
+                                            <div className="font-semibold">{formatCurrency(inv.quantity * inv.valuePerShare)}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-muted-foreground">Cotas</div>
+                                            <div>{inv.quantity}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-muted-foreground">Valor / Cota</div>
+                                            <div>{formatCurrency(inv.valuePerShare)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
             )) : (
@@ -275,3 +322,5 @@ export default function InvestmentsPage() {
     </>
   );
 }
+
+    

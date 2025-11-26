@@ -66,3 +66,5 @@ export type SeoSettings = {
   faviconUrl?: string;
   logoUrl?: string;
 };
+
+    

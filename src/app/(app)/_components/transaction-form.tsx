@@ -13,11 +13,14 @@ import { collection, doc, writeBatch } from 'firebase/firestore';
 import type { CreditCard } from '@/lib/types';
 import { serverTimestamp } from 'firebase/firestore';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
 
 const transactionCategories = [
   'Moradia',
@@ -76,6 +79,8 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
   const { firestore, user } = useFirebase();
+  const isMobile = useIsMobile();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const creditCardsRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -141,7 +146,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
             transactionType: data.transactionType,
             paymentMethod: data.paymentMethod,
             creditCardId: data.creditCardId || null,
-            date: serverTimestamp(),
+            date: data.firstInstallmentDate || serverTimestamp(),
             installments: 1,
             installmentNumber: 1,
         };
@@ -151,6 +156,36 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
     form.reset();
     onTransactionSaved();
   }
+  
+  const CalendarButton = ({ field }: { field: any }) => (
+    <Button
+      variant={"outline"}
+      className={cn(
+        "w-full justify-start text-left font-normal",
+        !field.value && "text-muted-foreground"
+      )}
+    >
+      <CalendarIcon className="mr-2 h-4 w-4" />
+      {field.value ? (
+        format(field.value, "PPP", { locale: ptBR })
+      ) : (
+        <span>Escolha uma data</span>
+      )}
+    </Button>
+  );
+
+  const CalendarComponent = ({ field }: { field: any }) => (
+    <Calendar
+      mode="single"
+      selected={field.value}
+      onSelect={(date) => {
+        field.onChange(date);
+        setIsCalendarOpen(false); // Fecha o dialog/popover ao selecionar
+      }}
+      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+      initialFocus
+    />
+  );
 
   return (
     <Form {...form}>
@@ -320,37 +355,29 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Data da Primeira Parcela</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP", { locale: ptBR })
-                                  ) : (
-                                    <span>Escolha uma data</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) =>
-                                  date < new Date(new Date().setHours(0,0,0,0))
-                                }
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                           {isMobile ? (
+                                <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                    <DialogTrigger asChild>
+                                        <FormControl>
+                                             <CalendarButton field={field} />
+                                        </FormControl>
+                                    </DialogTrigger>
+                                    <DialogContent className="w-auto p-0">
+                                       <CalendarComponent field={field} />
+                                    </DialogContent>
+                                </Dialog>
+                           ) : (
+                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <CalendarButton field={field} />
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <CalendarComponent field={field} />
+                                    </PopoverContent>
+                                </Popover>
+                           )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -367,3 +394,5 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
     </Form>
   );
 }
+
+    
