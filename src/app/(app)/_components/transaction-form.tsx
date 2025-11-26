@@ -108,7 +108,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
                   <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    className="flex space-x-4"
+                    className="flex flex-col sm:flex-row sm:space-x-4"
                   >
                     <FormItem className="flex items-center space-x-2">
                       <FormControl>
@@ -193,7 +193,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
                   <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    className="flex space-x-4"
+                    className="flex flex-col sm:flex-row sm:space-x-4"
                   >
                     <FormItem className="flex items-center space-x-2">
                       <FormControl><RadioGroupItem value="cash" id="cash" /></FormControl>
@@ -249,5 +249,3 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
     </Form>
   );
 }
-
-    

@@ -174,11 +174,13 @@ export default function TransactionsPage() {
       </PageHeader>
       
       <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">Todas</TabsTrigger>
-          <TabsTrigger value="income">Rendas</TabsTrigger>
-          <TabsTrigger value="expenses">Despesas</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2">
+            <TabsList>
+            <TabsTrigger value="all">Todas</TabsTrigger>
+            <TabsTrigger value="income">Rendas</TabsTrigger>
+            <TabsTrigger value="expenses">Despesas</TabsTrigger>
+            </TabsList>
+        </div>
         <TabsContent value="all">
           <TransactionsTable transactions={transactions} isLoading={isLoading} />
         </TabsContent>
