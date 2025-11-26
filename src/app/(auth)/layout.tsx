@@ -7,13 +7,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center relative">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-y-hidden">
       <DotsBackground />
-      <div className="absolute top-16 sm:relative sm:top-auto sm:mb-8 z-10">
+      <div className="z-10 flex w-full flex-col items-center gap-8">
         <AppLogo />
-      </div>
-      <div className="z-10 w-full p-4">
-        {children}
+        <div className="w-full">{children}</div>
       </div>
     </div>
   );
