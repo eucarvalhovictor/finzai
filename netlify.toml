@@ -1,0 +1,11 @@
+# Configurações de build para a Netlify
+# Este arquivo instrui a Netlify sobre como compilar e implantar seu site.
+
+[build]
+  # O comando correto para compilar o projeto Next.js.
+  # Substitui qualquer configuração incorreta na interface da Netlify.
+  command = "npm run build"
+
+  # O diretório que contém o site compilado a ser publicado.
+  # Para o Next.js, este diretório é sempre '.next'.
+  publish = ".next"
