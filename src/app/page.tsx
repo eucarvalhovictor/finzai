@@ -149,9 +149,9 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative flex flex-col justify-center min-h-screen py-24 sm:py-32 overflow-hidden">
-             <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-10 items-center">
-                <div className="text-center md:text-left animate-on-scroll">
-                    <div className="mb-6 flex justify-center md:justify-start">
+             <div className="container mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-1 gap-10 items-center">
+                <div className="text-center md:text-center animate-on-scroll">
+                    <div className="mb-6 flex justify-center md:justify-center">
                         <div className="inline-flex items-center gap-2 bg-muted/50 text-foreground py-2 px-4 rounded-full border">
                             <Star className="h-5 w-5 text-primary" />
                             <span className="font-medium text-sm">Consultor AI disponível</span>
@@ -163,10 +163,10 @@ export default function LandingPage() {
                         finalmente em ordem.
                     </span>
                     </h1>
-                    <p className="mt-6 max-w-2xl mx-auto md:mx-0 text-lg text-muted-foreground">
+                    <p className="mt-6 max-w-2xl mx-auto md:mx-auto text-lg text-muted-foreground">
                     A plataforma inteligente que centraliza suas finanças, de cartões a investimentos, com o poder da inteligência artificial para te guiar.
                     </p>
-                    <div className="mt-10 flex flex-col sm:flex-row justify-center md:justify-start gap-4">
+                    <div className="mt-10 flex flex-col sm:flex-row justify-center md:justify-center gap-4">
                         <Button size="lg" asChild className="cta-button">
                             <a href="#pricing" onClick={(e) => handleScrollTo(e, 'pricing')}>Ver Planos</a>
                         </Button>
@@ -177,22 +177,6 @@ export default function LandingPage() {
                             </Link>
                         </Button>
                     </div>
-                </div>
-                 <div className="relative animate-on-scroll" style={{ animationDelay: '200ms' }}>
-                    {/* 
-                        Developer Note: The image placeholder below is ready. 
-                        Please add the image file 'hero-app-mockup.png' provided by the user to the `public/` directory.
-                        The code will automatically pick it up.
-                    */}
-                    <Image 
-                        src="/hero-app-mockup.png" 
-                        alt="App Mockup" 
-                        width={1080} 
-                        height={2340} 
-                        className="mx-auto max-w-xs md:max-w-sm lg:max-w-md"
-                        data-ai-hint="app screenshot" 
-                        priority
-                    />
                 </div>
             </div>
         </section>
