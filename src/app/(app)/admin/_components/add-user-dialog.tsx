@@ -24,12 +24,13 @@ import type { UserRole } from '@/lib/types';
 
 const roles: UserRole[] = ['basico', 'completo', 'admin'];
 
+// import UserRole from where it's defined
+import { UserRole } from 'path/to/user-role';
+
 const userSchema = z.object({
-  firstName: z.string().min(1, 'Nome é obrigatório.'),
-  lastName: z.string().min(1, 'Sobrenome é obrigatório.'),
   email: z.string().email('E-mail inválido.'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.'),
-  role: z.enum(roles, { required_error: 'Selecione um cargo.' }),
+  role: z.nativeEnum(UserRole, { required_error: 'Escolha um cargo.' })
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
