@@ -140,12 +140,12 @@ service cloud.firestore {
       }
 
       /**
-       * @description Manages investment accounts owned by a specific user.
-       * @path /users/{userId}/investmentAccounts/{investmentAccountId}
-       * @allow (list) An authenticated user can list all investment accounts within their own user path.
-       * @deny (create) A user cannot create an investment account document in another user's path.
+       * @description Manages investment assets owned by a specific user.
+       * @path /users/{userId}/investments/{investmentId}
+       * @allow (list) An authenticated user can list all investment assets within their own user path.
+       * @deny (create) A user cannot create an investment document in another user's path.
        */
-      match /investmentAccounts/{investmentAccountId} {
+      match /investments/{investmentId} {
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
         allow create: if isCreatingOwnSubcollectionDoc(userId);
