@@ -4,11 +4,12 @@ import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, TrendingUp, Star, Instagram, Mail, BrainCircuit, Banknote, Shield } from 'lucide-react';
+import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, TrendingUp, Star, Instagram, Mail, BrainCircuit, Banknote, Shield, Users } from 'lucide-react';
 import Link from 'next/link';
 import { CookieConsentBanner } from '@/components/ui/cookie-consent-banner';
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
 
 const featuresBasic = [
@@ -79,6 +80,12 @@ const testimonials = [
     role: 'Estudante Universitário',
     avatar: 'RS',
     comment: 'Comecei com o plano básico para organizar minha mesada e despesas. É incrível como a plataforma é fácil de usar. Já estou planejando meu upgrade para o plano Completo!'
+  },
+  {
+    name: 'Beatriz G.',
+    role: 'Médica',
+    avatar: 'BG',
+    comment: 'Plataforma fantástica! A capacidade de visualizar a alocação dos meus investimentos por corretora me deu a confiança que eu precisava para diversificar melhor minha carteira. Indispensável!'
   }
 ];
 
@@ -154,8 +161,10 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
+
         {/* Why Choose Us Section */}
-        <section className="py-20 sm:py-24 bg-muted/30">
+        <section className="py-20 sm:py-24">
              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
                     <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Porque escolher a FinzAI?</h2>
@@ -201,13 +210,21 @@ export default function LandingPage() {
             </div>
         </section>
 
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
+
         {/* Testimonials Section */}
         <section className="py-20 sm:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
-                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">O que nossos clientes dizem</h2>
+                <div className="max-w-2xl text-center mx-auto mb-12 animate-on-scroll">
+                    <div className="flex items-center justify-center gap-1 mb-2">
+                        {[...Array(5)].map((_, i) => (
+                           <Star key={i} className={`h-6 w-6 text-yellow-400 fill-yellow-400 ${i === 4 ? 'text-yellow-400/70 fill-yellow-400/70' : ''}`} />
+                        ))}
+                    </div>
+                    <p className="font-semibold">Avaliação média de 4.9 de 5 estrelas</p>
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mt-2">Amada por mais de 5.000 usuários satisfeitos</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {testimonials.map((testimonial, index) => (
                         <Card key={index} className="flex flex-col p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: `${index * 150}ms`}}>
                             <div className="flex items-center gap-1 mb-4">
@@ -230,8 +247,16 @@ export default function LandingPage() {
                         </Card>
                     ))}
                 </div>
+                <div className="text-center mt-16 animate-on-scroll">
+                    <h3 className="text-xl font-semibold">Junte-se a milhares de pessoas que estão no controle de suas finanças</h3>
+                    <Button size="lg" className="mt-6 cta-button" asChild>
+                        <Link href="/register">Eu quero ter o controle também</Link>
+                    </Button>
+                </div>
             </div>
         </section>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
 
         {/* Pricing Section */}
         <section id="pricing" className="py-20 sm:py-24">
@@ -314,8 +339,10 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8"><Separator /></div>
+
          {/* FAQ Section */}
-        <section className="py-20 sm:py-24 bg-muted/30">
+        <section className="py-20 sm:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl">
                 <div className="text-center mb-12 animate-on-scroll">
                     <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Perguntas Frequentes</h2>
