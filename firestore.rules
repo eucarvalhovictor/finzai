@@ -166,6 +166,19 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
         allow delete: if isExistingOwner(userId);
       }
+      
+      /**
+       * @description Manages records of paid invoices for a user.
+       * @path /users/{userId}/paidInvoices/{paidInvoiceId}
+       * @allow (read, list, create) The owner of the data can manage their paid invoice records.
+       */
+      match /paidInvoices/{paidInvoiceId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnSubcollectionDoc(userId);
+        allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
 
       /**
        * @description Manages AI-generated budget suggestions for a specific user.

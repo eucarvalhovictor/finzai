@@ -67,4 +67,11 @@ export type SeoSettings = {
   logoUrl?: string;
 };
 
-    
+export type PaidInvoice = {
+    id: string;
+    userId: string;
+    creditCardId: string;
+    amountPaid: number;
+    invoiceMonthYear: string; // "YYYY-MM"
+    paymentDate: Timestamp;
+};

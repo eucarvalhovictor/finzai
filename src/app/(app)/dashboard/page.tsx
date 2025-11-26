@@ -23,7 +23,7 @@ import { DollarSign, Wallet, Landmark } from 'lucide-react';
 import { DashboardChart } from './_components/dashboard-chart';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
-import type { Transaction, Investment } from '@/lib/types';
+import type { Transaction, Investment, PaidInvoice } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type UserProfile = {
@@ -66,10 +66,16 @@ export default function DashboardPage() {
     if (!user || !firestore) return null;
     return collection(firestore, `users/${user.uid}/investments`);
   }, [user, firestore]);
+  
+  const paidInvoicesRef = useMemoFirebase(() => {
+    if(!user || !firestore) return null;
+    return collection(firestore, `users/${user.uid}/paidInvoices`);
+  }, [user, firestore]);
 
   const { data: allTransactions, isLoading: isLoadingAll } = useCollection<Transaction>(transactionsRef);
   const { data: recentTransactions, isLoading: isLoadingRecent } = useCollection<Transaction>(recentTransactionsQuery);
   const { data: investments, isLoading: isLoadingInvestments } = useCollection<Investment>(investmentsRef);
+  const {data: paidInvoices, isLoading: isLoadingInvoices } = useCollection<PaidInvoice>(paidInvoicesRef);
 
   const financialSummary = useMemo(() => {
     if (!allTransactions) {
@@ -92,17 +98,20 @@ export default function DashboardPage() {
         return acc;
     }, { income: 0, expenses: 0 });
     
-    // Correctly calculate the debt for the current month's credit card bill
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
+    const currentMonthYearStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+    
+    const paidCardIdsForMonth = paidInvoices
+        ?.filter(p => p.invoiceMonthYear === currentMonthYearStr)
+        .map(p => p.creditCardId) || [];
 
     const totalDebt = allTransactions
         .filter(t => {
-            if (t.paymentMethod !== 'card' || t.transactionType !== 'expense') {
+            if (t.paymentMethod !== 'card' || t.transactionType !== 'expense' || paidCardIdsForMonth.includes(t.creditCardId!)) {
                 return false;
             }
-            // Ensure t.date is valid and can be converted to a Date object
             if (t.date && typeof t.date.toDate === 'function') {
                 const transactionDate = t.date.toDate();
                 return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
@@ -123,9 +132,9 @@ export default function DashboardPage() {
       monthlyExpenses: transactionSummary.expenses,
     };
 
-  }, [allTransactions, investments]);
+  }, [allTransactions, investments, paidInvoices]);
 
-  const isLoading = isLoadingAll || isLoadingProfile || isLoadingInvestments;
+  const isLoading = isLoadingAll || isLoadingProfile || isLoadingInvestments || isLoadingInvoices;
 
   const CardSkeleton = () => (
     <Card>
