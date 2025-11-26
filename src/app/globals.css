@@ -92,7 +92,7 @@
   }
 
   .cta-button {
-    @apply bg-gradient-to-r from-primary to-primary/80 text-primary-foreground;
+    @apply bg-gradient-to-r from-primary to-primary/70 text-primary-foreground;
   }
   
   .cta-button:hover {

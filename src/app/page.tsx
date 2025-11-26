@@ -5,7 +5,7 @@ import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, TrendingUp, Star, Instagram, Mail, BrainCircuit, Banknote, Shield, Users } from 'lucide-react';
+import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, TrendingUp, Star, Instagram, Mail, BrainCircuit, Banknote, Shield, Users, Play } from 'lucide-react';
 import Link from 'next/link';
 import { CookieConsentBanner } from '@/components/ui/cookie-consent-banner';
 import React from 'react';
@@ -146,7 +146,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative flex flex-col justify-center min-h-screen py-24 sm:py-32 animate-on-scroll">
+        <section className="relative flex flex-col justify-center items-center min-h-screen py-24 sm:py-32 animate-on-scroll">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="mb-6 flex justify-center animate-on-scroll">
                 <div className="inline-flex items-center gap-2 bg-muted/50 text-foreground py-2 px-4 rounded-full border">
@@ -165,7 +165,13 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex justify-center gap-4">
               <Button size="lg" asChild className="cta-button">
-                <Link href="/register">Comece agora, é grátis</Link>
+                 <a href="#pricing" onClick={(e) => handleScrollTo(e, 'pricing')}>Ver Planos</a>
+              </Button>
+               <Button size="lg" variant="outline" asChild>
+                <Link href="#">
+                  <Play className="mr-2" />
+                  Ver Demonstração
+                </Link>
               </Button>
             </div>
           </div>
