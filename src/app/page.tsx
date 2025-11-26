@@ -4,11 +4,10 @@ import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, BadgeCheck } from 'lucide-react';
+import { Check, Bot, CreditCard, ShieldCheck, Crown, LogIn, BadgeCheck, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { CookieConsentBanner } from '@/components/ui/cookie-consent-banner';
 import React from 'react';
-import Image from 'next/image';
 
 const featuresBasic = [
   'Gerencie transações',
@@ -87,11 +86,6 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative py-24 sm:py-32 animate-on-scroll">
-           <div 
-            className="absolute inset-0 -z-10 h-full w-full bg-cover bg-center opacity-10" 
-            style={{backgroundImage: 'url(https://picsum.photos/seed/hero/1200/800)'}} 
-            data-ai-hint="abstract background"
-            ></div>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
               Sua vida financeira,{' '}
@@ -113,45 +107,46 @@ export default function LandingPage() {
         {/* Features Section */}
         <section className="py-20 sm:py-24 bg-muted/30">
              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                    <div>
-                         <div className="max-w-xl text-left mb-12 animate-on-scroll">
-                            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Tudo que você precisa em um só lugar</h2>
-                            <p className="mt-4 text-lg text-muted-foreground">
-                                Ferramentas poderosas para transformar sua relação com o dinheiro.
-                            </p>
+                <div className="max-w-xl text-center mx-auto mb-12 animate-on-scroll">
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Tudo que você precisa em um só lugar</h2>
+                    <p className="mt-4 text-lg text-muted-foreground">
+                        Ferramentas poderosas para transformar sua relação com o dinheiro.
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <Bot className="h-7 w-7" />
                         </div>
-                        <div className="grid grid-cols-1 gap-8">
-                            <Card className="flex items-start text-left p-6 animate-on-scroll bg-card/50 hover-lift">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                                    <Bot className="h-6 w-6" />
-                                </div>
-                                <div className="ml-4">
-                                    <h3 className="text-xl font-bold">Consultor AI</h3>
-                                    <p className="mt-1 text-muted-foreground">Receba insights e sugestões personalizadas para otimizar seus gastos e investimentos. (Plano Completo)</p>
-                                </div>
-                            </Card>
-                            <Card className="flex items-start text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '200ms'}}>
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                                    <CreditCard className="h-6 w-6" />
-                                </div>
-                                 <div className="ml-4">
-                                    <h3 className="text-xl font-bold">Gestão de Cartões</h3>
-                                    <p className="mt-1 text-muted-foreground">Visualize todas as suas faturas, limites e despesas de cartão de crédito em um único dashboard.</p>
-                                </div>
-                            </Card>
+                        <CardHeader>
+                            <CardTitle className="text-xl">Consultor Financeiro com IA</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                            <p className="text-muted-foreground">Receba insights e orçamentos personalizados, e entenda para onde seu dinheiro está indo. Nossa IA analisa seus padrões de gastos e investimentos para fornecer recomendações que te ajudam a economizar e a investir melhor.</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '200ms'}}>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <CreditCard className="h-7 w-7" />
                         </div>
-                    </div>
-                     <div className="animate-on-scroll" style={{animationDelay: '400ms'}}>
-                        <Image 
-                            src="https://picsum.photos/seed/features/600/700" 
-                            alt="Dashboard da plataforma FinzAI" 
-                            width={600} 
-                            height={700}
-                            className="rounded-xl shadow-2xl"
-                            data-ai-hint="finance dashboard"
-                            />
-                    </div>
+                        <CardHeader>
+                            <CardTitle className="text-xl">Gestão de Cartões Simplificada</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                           <p className="text-muted-foreground">Visualize todas as suas faturas, limites e despesas de cartão em um único dashboard. Centralize a informação e nunca mais perca uma data de vencimento ou se surpreenda com o valor da fatura.</p>
+                        </CardContent>
+                    </Card>
+                     <Card className="flex flex-col text-left p-6 animate-on-scroll bg-card/50 hover-lift" style={{animationDelay: '400ms'}}>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <TrendingUp className="h-7 w-7" />
+                        </div>
+                        <CardHeader>
+                            <CardTitle className="text-xl">Carteira de Investimentos Unificada</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                           <p className="text-muted-foreground">Acompanhe o desempenho de todos os seus ativos em um só lugar. Suportamos Ações, FIIs, BDRs, Renda Fixa (CDB, LCA, etc.) e Criptomoedas para que você tenha uma visão completa do seu patrimônio.</p>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </section>
@@ -167,7 +162,7 @@ export default function LandingPage() {
             </div>
              <div className="text-center mb-16 animate-on-scroll">
                 <div className="inline-flex items-center gap-2 bg-muted/50 text-foreground py-2 px-4 rounded-full">
-                    <BadgeCheck className="h-5 w-5 text-primary" />
+                    <ShieldCheck className="h-5 w-5 text-primary" />
                     <span className="font-medium">Garantia incondicional de 7 dias.</span>
                 </div>
              </div>
@@ -179,7 +174,7 @@ export default function LandingPage() {
                   <CardDescription>Para quem está começando a organizar as finanças.</CardDescription>
                   <div className="pt-4">
                     <span className="text-4xl font-bold">R$15</span>
-                    <span className="text-muted-foreground">/mês</span>
+                    <span className="text-muted-foreground">,00/mês</span>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 p-8 pt-0">
@@ -207,7 +202,7 @@ export default function LandingPage() {
                       MAIS POPULAR
                     </div>
                   </div>
-                  <Card className="flex flex-col rounded-2xl border-2 border-primary shadow-2xl shadow-primary/10 bg-card/80 h-full">
+                  <Card className="flex flex-col rounded-2xl border-2 border-primary shadow-2xl shadow-primary/10 bg-card/80">
                     <CardHeader className="p-8">
                       <CardTitle className="text-2xl">Completo</CardTitle>
                       <CardDescription>Para investidores e quem busca otimização máxima.</CardDescription>
