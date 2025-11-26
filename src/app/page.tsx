@@ -283,6 +283,7 @@ export default function LandingPage() {
                     <span className="text-4xl font-bold">R$15</span>
                     <span className="text-muted-foreground">,00/mês</span>
                   </div>
+                   <p className="text-xs text-muted-foreground pt-2">Cobrança recorrente. Não compromete o limite do seu cartão. Cancele quando quiser.</p>
                 </CardHeader>
                 <CardContent className="flex-1 p-8 pt-0">
                   <ul className="space-y-4">
@@ -317,6 +318,7 @@ export default function LandingPage() {
                         <span className="text-4xl font-bold">R$39</span>
                         <span className="text-muted-foreground">,90/mês</span>
                       </div>
+                      <p className="text-xs text-muted-foreground pt-2">Cobrança recorrente. Não compromete o limite do seu cartão. Cancele quando quiser.</p>
                     </CardHeader>
                     <CardContent className="flex-1 p-8 pt-0">
                       <ul className="space-y-4">
