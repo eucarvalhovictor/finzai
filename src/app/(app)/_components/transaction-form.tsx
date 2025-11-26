@@ -81,6 +81,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
   const { firestore, user } = useFirebase();
   const isMobile = useIsMobile();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [today] = useState(new Date());
 
   const creditCardsRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -182,7 +183,7 @@ export function TransactionForm({ onTransactionSaved }: TransactionFormProps) {
         field.onChange(date);
         setIsCalendarOpen(false); // Fecha o dialog/popover ao selecionar
       }}
-      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+      disabled={(date) => date < today}
       initialFocus
     />
   );
