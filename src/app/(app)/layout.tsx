@@ -10,11 +10,13 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { SidebarNav } from './_components/sidebar-nav';
-import { useUser } from '@/firebase';
+import { useUser, useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NavigationProgress } from '@/components/ui/navigation-progress';
 import { Suspense, useEffect } from 'react';
+import type { UserProfile } from '@/lib/types';
+import { doc } from 'firebase/firestore';
 
 export default function AppLayout({
   children,
@@ -23,14 +25,25 @@ export default function AppLayout({
 }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const { firestore } = useFirebase();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [user, firestore]);
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+    // Se o usuário está carregado e seu perfil tem o cargo 'pending', redireciona
+    if (!isLoadingProfile && userProfile?.role === 'pending') {
+      router.push('/choose-plan');
+    }
+  }, [user, isUserLoading, userProfile, isLoadingProfile, router]);
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || isLoadingProfile || !userProfile || userProfile.role === 'pending') {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="p-4 space-y-4">

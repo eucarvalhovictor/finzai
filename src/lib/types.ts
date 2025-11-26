@@ -47,7 +47,7 @@ export type AssetAllocation = {
   value: number;
 };
 
-export type UserRole = 'basico' | 'completo' | 'admin';
+export type UserRole = 'basico' | 'completo' | 'admin' | 'pending';
 
 export type UserProfile = {
   id: string;

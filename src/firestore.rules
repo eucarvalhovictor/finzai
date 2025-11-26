@@ -53,8 +53,8 @@ service cloud.firestore {
     }
     
      /**
-     * Returns true if the user is an administrator.
-     * This reads the user's document to check their role.
+     * Returns true if the user is an administrator by checking their role in their own document.
+     * This is the correct way to check for admin privileges in security rules.
      */
     function isAdmin() {
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
@@ -68,8 +68,8 @@ service cloud.firestore {
      */
     function isCreatingOwnUserDoc(userId) {
       let isIdMatching = request.resource.data.id == userId;
-      // Allow admin to create users with any role, otherwise default to 'basico'
-      let isRoleValid = (isAdmin() && request.resource.data.role in ['basico', 'completo', 'admin']) || (request.resource.data.role == 'basico');
+      // Allow admin to create users with any role, otherwise default to 'pending'
+      let isRoleValid = (isAdmin() && request.resource.data.role in ['basico', 'completo', 'admin']) || (request.resource.data.role == 'pending') || (request.resource.data.role == 'admin' && list(/databases/$(database)/documents/users, 1).size() == 0);
       return (isOwner(userId) || isAdmin()) && isIdMatching && isRoleValid;
     }
     
@@ -116,10 +116,11 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin() || request.query.limit <= 1;
       allow create: if isCreatingOwnUserDoc(userId);
-      // Owners can update their firstName and lastName
-      // Admins can update a user's role.
-      allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName']))
-                      || (isAdmin() && request.resource.data.keys().hasOnly(['role']));
+      // Owners can update their own profile. Admins can update any user's role.
+      // A user with role 'pending' can update their own role to 'basico' or 'completo'.
+      allow update: if (isOwner(userId) && request.resource.data.keys().hasAll(['firstName', 'lastName', 'photoURL'])) 
+                      || (isAdmin() && request.resource.data.keys().hasOnly(['role']))
+                      || (isOwner(userId) && resource.data.role == 'pending' && request.resource.data.role in ['basico', 'completo']);
       allow delete: if isAdmin();
 
       // -----------------------------------------------------------------------
@@ -141,12 +142,12 @@ service cloud.firestore {
       }
 
       /**
-       * @description Manages investment accounts owned by a specific user.
-       * @path /users/{userId}/investmentAccounts/{investmentAccountId}
-       * @allow (list) An authenticated user can list all investment accounts within their own user path.
-       * @deny (create) A user cannot create an investment account document in another user's path.
+       * @description Manages investment assets owned by a specific user.
+       * @path /users/{userId}/investments/{investmentId}
+       * @allow (list) An authenticated user can list all investment assets within their own user path.
+       * @deny (create) A user cannot create an investment document in another user's path.
        */
-      match /investmentAccounts/{investmentAccountId} {
+      match /investments/{investmentId} {
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
         allow create: if isCreatingOwnSubcollectionDoc(userId);
@@ -167,6 +168,19 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
         allow delete: if isExistingOwner(userId);
       }
+      
+      /**
+       * @description Manages records of paid invoices for a user.
+       * @path /users/{userId}/paidInvoices/{paidInvoiceId}
+       * @allow (read, list, create) The owner of the data can manage their paid invoice records.
+       */
+      match /paidInvoices/{paidInvoiceId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isCreatingOwnSubcollectionDoc(userId);
+        allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
 
       /**
        * @description Manages AI-generated budget suggestions for a specific user.
@@ -181,6 +195,21 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isSubcollectionDocOwnerIdImmutable();
         allow delete: if isExistingOwner(userId);
       }
+    }
+
+    // -------------------------------------------------------------------------
+    // Global Settings (/settings)
+    // -------------------------------------------------------------------------
+    
+    /**
+     * @description Manages global application settings, like SEO.
+     * @allow (read) Anyone can read the settings.
+     * @allow (write) Only admins can write/update the settings.
+     */
+    match /settings/{settingId} {
+      allow get: if true;
+      allow list: if true;
+      allow write: if isAdmin();
     }
   }
 }

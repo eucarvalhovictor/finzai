@@ -57,8 +57,8 @@ export default function RegisterPage() {
         displayName: `${data.firstName} ${data.lastName}`
       });
 
-      // Define o cargo: 'admin' para o primeiro usuário, 'basico' para os demais
-      const userRole = isFirstUser ? 'admin' : 'basico';
+      // Define o cargo: 'admin' para o primeiro usuário, 'pending' para os demais
+      const userRole = isFirstUser ? 'admin' : 'pending';
 
       // Create user document in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
@@ -76,9 +76,11 @@ export default function RegisterPage() {
           title: 'Conta de Administrador Criada!',
           description: 'Você foi definido como o primeiro administrador do sistema.',
         });
+        router.push('/dashboard');
+      } else {
+        router.push('/choose-plan');
       }
 
-      router.push('/dashboard');
     } catch (error: any) {
        toast({
         variant: 'destructive',

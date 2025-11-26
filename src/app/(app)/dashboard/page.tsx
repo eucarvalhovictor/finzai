@@ -19,18 +19,12 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatFirebaseTimestamp } from '@/lib/data';
-import { DollarSign, Wallet, Landmark } from 'lucide-react';
+import { DollarSign, Wallet, Landmark, Crown } from 'lucide-react';
 import { DashboardChart } from './_components/dashboard-chart';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
-import type { Transaction, Investment, PaidInvoice } from '@/lib/types';
+import type { Transaction, Investment, PaidInvoice, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-
-type UserProfile = {
-  firstName: string;
-  lastName: string;
-  email: string;
-}
 
 export default function DashboardPage() {
   const { user, firestore } = useFirebase();
@@ -110,7 +104,7 @@ export default function DashboardPage() {
 
     const totalDebt = allTransactions
         .filter(t => {
-            if (t.paymentMethod !== 'card' || t.transactionType !== 'expense' || paidCardIdsForMonth.includes(t.creditCardId!)) {
+            if (t.paymentMethod !== 'card' || t.transactionType !== 'expense' || (t.creditCardId && paidCardIdsForMonth.includes(t.creditCardId))) {
                 return false;
             }
             if (t.date && typeof t.date.toDate === 'function') {
@@ -152,6 +146,8 @@ export default function DashboardPage() {
 
   const userName = userProfile ? `${userProfile.firstName}` : (user?.displayName?.split(' ')[0] || 'Usuário');
   const pageTitle = isLoadingProfile || !greeting ? 'Carregando...' : `${greeting}, ${userName}`;
+  
+  const planName = userProfile?.role.charAt(0).toUpperCase() + userProfile?.role.slice(1);
 
   return (
     <div className="grid gap-6">
@@ -159,6 +155,14 @@ export default function DashboardPage() {
         title={pageTitle}
         description="Aqui está um resumo do seu status financeiro atual."
       />
+      {userProfile && userProfile.role !== 'admin' && (
+        <div className="flex justify-center -mt-4 mb-2">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary py-2 px-4 rounded-lg border border-primary/20">
+                <Crown className="h-5 w-5" />
+                <span className="font-medium text-sm">Seu plano atual: {planName}</span>
+            </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {isLoading ? (
           <>

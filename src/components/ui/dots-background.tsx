@@ -31,7 +31,7 @@ export function DotsBackground() {
       <div
         className="absolute inset-0 h-full w-full"
         style={{
-          backgroundImage: 'radial-gradient(circle, hsl(var(--primary) / 0.1) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, hsl(var(--primary) / 0.3) 1.5px, transparent 1.5px)',
           backgroundSize: '2rem 2rem',
         }}
       ></div>
