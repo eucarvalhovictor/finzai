@@ -135,7 +135,7 @@ export function SidebarNav() {
           <SheetTrigger asChild>
             {AddTransactionButton}
           </SheetTrigger>
-          <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-lg">
+          <SheetContent side="bottom" className="mx-auto rounded-t-lg">
              <SheetHeader>
                 <SheetTitle>Adicionar Nova Transação</SheetTitle>
                 <SheetDescription>Preencha os detalhes da sua nova transação.</SheetDescription>
