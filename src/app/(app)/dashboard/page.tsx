@@ -121,11 +121,12 @@ export default function DashboardPage() {
   );
 
   const userName = userProfile ? `${userProfile.firstName} ${userProfile.lastName}` : (user?.displayName || 'Usuário');
+  const pageTitle = isLoadingProfile || !greeting ? 'Carregando...' : `${greeting}, ${userName}`;
 
   return (
     <div className="grid gap-6">
       <PageHeader
-        title={isLoadingProfile ? 'Carregando...' : `${greeting}, ${userName}`}
+        title={pageTitle}
         description="Aqui está um resumo do seu status financeiro atual."
       />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
