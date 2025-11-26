@@ -9,7 +9,6 @@ import { Bot, AlertCircle, Loader2 } from 'lucide-react';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Transaction, Investment } from '@/lib/types';
-import { investments as mockInvestments } from '@/lib/data'; // Usando dados mockados por enquanto
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useState } from 'react';
 
@@ -29,22 +28,33 @@ export function AIConsultant() {
   }, [user, firestore]);
   const { data: transactions, isLoading: isLoadingTransactions } = useCollection<Transaction>(transactionsQuery);
   
-  // Por enquanto, usaremos os investimentos mockados. Em um próximo passo, podemos criar a coleção no Firestore.
-  const investments: Investment[] = mockInvestments;
-  const isLoadingInvestments = false; 
+  // Busca investimentos do Firestore
+  const investmentsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `users/${user.uid}/investments`);
+  }, [user, firestore]);
+  const { data: investments, isLoading: isLoadingInvestments } = useCollection<Investment>(investmentsQuery);
 
   const canAnalyze = transactions && transactions.length >= 10;
   
   const [state, formAction] = useFormState(generateFinancialAnalysis, initialState);
 
   const handleAnalysis = async () => {
-    if (!transactions) return;
+    if (!transactions || !investments) return;
     
     // Inicia a transição de estado pendente
     setIsPending(true);
+    
+    // Mapeia os investimentos para o formato esperado pela IA
+    const analysisInvestments = investments.map(inv => ({
+        name: inv.name,
+        type: inv.type,
+        value: inv.quantity * inv.valuePerShare,
+        changePercent: 0, // Placeholder, a IA não usa este campo atualmente
+    }));
 
     // Chama a server action com os dados
-    await formAction({ transactions, investments });
+    await formAction({ transactions, investments: analysisInvestments });
 
     // Finaliza a transição de estado pendente
     setIsPending(false);
@@ -77,7 +87,7 @@ export function AIConsultant() {
                 </Alert>
             ) : (
                  <p className="text-sm text-muted-foreground">
-                    Tudo pronto! Temos {transactions?.length} transações e {investments?.length} investimentos para analisar.
+                    Tudo pronto! Temos {transactions?.length} transações e {investments?.length || 0} investimentos para analisar.
                 </p>
             )}
             {!state.isSuccess && state.message && (

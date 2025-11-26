@@ -24,11 +24,13 @@ export type CreditCard = {
 
 export type Investment = {
   id: string;
+  userId: string;
   name: string;
-  type: 'Stock' | 'Bond' | 'Crypto' | 'Fund';
-  value: number;
-  change: number;
-  changePercent: number;
+  ticker: string;
+  type: 'Ação' | 'FII' | 'BDR' | 'Cripto' | 'Renda Fixa';
+  quantity: number;
+  valuePerShare: number;
+  institution: string; // Corretora
 };
 
 export type Account = {
@@ -53,3 +55,5 @@ export type UserProfile = {
   role: UserRole;
   photoURL?: string;
 };
+
+    

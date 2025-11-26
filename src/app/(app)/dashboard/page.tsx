@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatFirebaseTimestamp, investments as mockInvestments } from '@/lib/data';
+import { formatCurrency, formatFirebaseTimestamp } from '@/lib/data';
 import { DollarSign, Wallet, Landmark } from 'lucide-react';
 import { DashboardChart } from './_components/dashboard-chart';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -61,12 +61,15 @@ export default function DashboardPage() {
     if (!transactionsRef) return null;
     return query(transactionsRef, orderBy('date', 'desc'), limit(5));
   }, [transactionsRef]);
+  
+  const investmentsRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, `users/${user.uid}/investments`);
+  }, [user, firestore]);
 
   const { data: allTransactions, isLoading: isLoadingAll } = useCollection<Transaction>(transactionsRef);
   const { data: recentTransactions, isLoading: isLoadingRecent } = useCollection<Transaction>(recentTransactionsQuery);
-  
-  // Por enquanto, usaremos os investimentos mockados.
-  const investments: Investment[] = mockInvestments;
+  const { data: investments, isLoading: isLoadingInvestments } = useCollection<Investment>(investmentsRef);
 
   const financialSummary = useMemo(() => {
     if (!allTransactions) {
@@ -90,7 +93,7 @@ export default function DashboardPage() {
     }, { income: 0, expenses: 0 });
 
     const totalBalance = transactionSummary.income + transactionSummary.expenses;
-    const netWorth = investments.reduce((sum, inv) => sum + inv.value, 0);
+    const netWorth = investments?.reduce((sum, inv) => sum + (inv.quantity * inv.valuePerShare), 0) || 0;
 
     return {
       totalBalance: totalBalance,
@@ -102,7 +105,7 @@ export default function DashboardPage() {
 
   }, [allTransactions, investments]);
 
-  const isLoading = isLoadingAll || isLoadingProfile;
+  const isLoading = isLoadingAll || isLoadingProfile || isLoadingInvestments;
 
   const CardSkeleton = () => (
     <Card>

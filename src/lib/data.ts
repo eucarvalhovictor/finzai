@@ -7,7 +7,8 @@ export const transactions: Transaction[] = [];
 
 export const creditCards: CreditCard[] = [];
 
-export const investments: Investment[] = [];
+// Mock data for investments is no longer needed as it will come from Firestore
+// export const investments: Investment[] = [];
 
 export const assetAllocation: AssetAllocation[] = [];
 
@@ -49,4 +50,4 @@ export const formatFirebaseTimestamp = (timestamp: any): string => {
   return 'Data inválida';
 };
 
-    
+        
