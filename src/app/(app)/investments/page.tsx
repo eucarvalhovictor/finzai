@@ -25,13 +25,16 @@ import {
 } from "@/components/ui/chart"
 import { Button } from '@/components/ui/button';
 import { Pie, PieChart, Cell, ResponsiveContainer } from "recharts"
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { useFirebase, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, query, doc } from 'firebase/firestore';
 import type { Investment } from '@/lib/types';
 import { formatCurrency } from '@/lib/data';
 import { TrendingUp, PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddInvestmentDialog } from './_components/add-investment-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const chartConfig = {
   value: {
@@ -48,6 +51,8 @@ const chartConfig = {
 export default function InvestmentsPage() {
   const { user, firestore } = useFirebase();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [investmentToDelete, setInvestmentToDelete] = React.useState<Investment | null>(null);
+  const { toast } = useToast();
 
   const investmentsQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -86,20 +91,30 @@ export default function InvestmentsPage() {
     return { totalInvestments: total, assetAllocation: allocation, investmentsByBrokerage: byBrokerage };
   }, [investments]);
 
-  const [activeType, setActiveType] = React.useState(
-    () => (assetAllocation.length > 0 ? assetAllocation[0].type : "N/A")
-  );
-  
+  const [activeType, setActiveType] = React.useState<string | null>(null);
+
   React.useEffect(() => {
-      if (assetAllocation.length > 0 && !assetAllocation.find(a => a.type === activeType)) {
-          setActiveType(assetAllocation[0].type);
-      }
+    if (assetAllocation.length > 0 && !activeType) {
+      setActiveType(assetAllocation[0].type);
+    }
   }, [assetAllocation, activeType]);
+
 
   const activeValue = React.useMemo(
     () => assetAllocation.find((a) => a.type === activeType)?.value,
     [activeType, assetAllocation]
   );
+
+  const handleDeleteInvestment = (investmentId: string) => {
+    if (!firestore || !user) return;
+    const docRef = doc(firestore, `users/${user.uid}/investments`, investmentId);
+    deleteDocumentNonBlocking(docRef);
+    toast({
+        title: "Ativo Excluído",
+        description: "O ativo foi removido da sua carteira.",
+    });
+    setInvestmentToDelete(null);
+  };
   
   const brokerages = Array.from(investmentsByBrokerage.keys());
 
@@ -188,7 +203,7 @@ export default function InvestmentsPage() {
                                     <TableHead className="text-right">Cotas</TableHead>
                                     <TableHead className="text-right">Valor / Cota</TableHead>
                                     <TableHead className="text-right">Posição Total</TableHead>
-                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableHead className="w-[50px] text-right">Ações</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -202,8 +217,21 @@ export default function InvestmentsPage() {
                                         <TableCell className="text-right">{inv.quantity}</TableCell>
                                         <TableCell className="text-right">{formatCurrency(inv.valuePerShare)}</TableCell>
                                         <TableCell className="text-right font-bold">{formatCurrency(inv.quantity * inv.valuePerShare)}</TableCell>
-                                        <TableCell>
-                                            {/* Ações como editar/excluir podem ser adicionadas aqui */}
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                        <span className="sr-only">Ações do ativo</span>
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onSelect={() => setInvestmentToDelete(inv)} className="text-destructive">
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Excluir
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -222,8 +250,28 @@ export default function InvestmentsPage() {
         </div>
       </div>
       <AddInvestmentDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
+
+       <AlertDialog open={!!investmentToDelete} onOpenChange={(isOpen) => !isOpen && setInvestmentToDelete(null)}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  {investmentToDelete && (
+                    <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso irá excluir permanentemente o ativo <span className="font-bold">{investmentToDelete.name}</span>.
+                    </AlertDialogDescription>
+                  )}
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setInvestmentToDelete(null)}>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                      onClick={() => investmentToDelete && handleDeleteInvestment(investmentToDelete.id)}
+                      className="bg-destructive hover:bg-destructive/90"
+                      >
+                      Sim, excluir ativo
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
-
-    
