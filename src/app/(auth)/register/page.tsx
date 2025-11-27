@@ -13,10 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { useFirebase, setDocumentNonBlocking } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { doc, serverTimestamp, collection, getDocs, query, limit } from 'firebase/firestore';
+import { doc, serverTimestamp, collection, getDocs, query, limit, setDoc } from 'firebase/firestore';
 
 
 export default function RegisterPage() {
@@ -40,7 +40,7 @@ export default function RegisterPage() {
         title: 'Erro de Configuração',
         description: 'O serviço de banco de dados não está disponível.',
       });
-      return;
+      return; // Previne a execução com firestore nulo
     }
     try {
       // Verifica se já existem usuários para definir o primeiro como admin
@@ -62,7 +62,7 @@ export default function RegisterPage() {
 
       // Create user document in Firestore
       const userDocRef = doc(firestore, 'users', user.uid);
-      setDocumentNonBlocking(userDocRef, {
+      await setDoc(userDocRef, {
         id: user.uid,
         email: user.email,
         firstName: data.firstName,
