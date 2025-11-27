@@ -2,7 +2,24 @@
 
 import { getFinancialAnalysis } from '@/ai/flows/ai-powered-budget-suggestions';
 import { z } from 'zod';
-import type { Transaction } from '@/lib/types';
+import type { Timestamp } from 'firebase/firestore';
+
+
+// A versão serializada da transação que a action recebe do cliente.
+type SerializableTransaction = {
+  id: string;
+  date: string; // A data é uma string aqui.
+  description: string;
+  amount: number;
+  category: 'Renda' | 'Moradia' | 'Alimentação' | 'Transporte' | 'Entretenimento' | 'Saúde' | 'Compras' | 'Serviços' | 'Outros';
+  transactionType: 'income' | 'expense';
+  userId: string;
+  paymentMethod: 'cash' | 'pix' | 'card';
+  creditCardId?: string | null;
+  installments?: number;
+  installmentNumber?: number;
+  originalTransactionId?: string;
+};
 
 
 export type AnalysisState = {
@@ -21,7 +38,7 @@ type InvestmentForAI = {
 
 export async function generateFinancialAnalysis(
   prevState: AnalysisState,
-  { transactions, investments }: { transactions: Transaction[], investments: InvestmentForAI[] }
+  { transactions, investments }: { transactions: SerializableTransaction[], investments: InvestmentForAI[] }
 ): Promise<AnalysisState> {
   
   if (!transactions || transactions.length < 10) {
@@ -32,6 +49,7 @@ export async function generateFinancialAnalysis(
   }
 
   try {
+    // O fluxo de IA já espera a data como string, então podemos passar diretamente.
     const result = await getFinancialAnalysis({
         transactions,
         investments,
