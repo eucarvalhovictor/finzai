@@ -153,7 +153,7 @@ export default function DashboardPage() {
   const userName = userProfile ? `${userProfile.firstName}` : (user?.displayName?.split(' ')[0] || 'Usuário');
   const pageTitle = isLoadingProfile || !greeting ? 'Carregando...' : `${greeting}, ${userName}`;
   
-  const planName = userProfile?.role.charAt(0).toUpperCase() + userProfile?.role.slice(1);
+  const planName = userProfile ? userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1) : '';
 
   return (
     <div className="grid gap-6">
